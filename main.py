@@ -15,7 +15,7 @@ logging.basicConfig(
 )
 
 # Установка токена Hugging Face
-openai.api_key = os.getenv('HUGGING_FACE_TOKEN')  # Убедитесь, что токен установлен в переменных окружения
+openai.api_key = os.getenv('TOKEN_GPT_API_1')  # Убедитесь, что токен установлен в переменных окружения
 openai.api_base = "http://localhost:1337/v1"  # Установка базового URL для локального сервера
 
 # Функция для обработки команды /start
@@ -34,13 +34,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         )
         
         reply_text = ""
-        if isinstance(response, dict):
-            reply_text = response['choices'][0]['message']['content']
-        else:
-            for token in response:
-                content = token["choices"][0]["delta"].get("content")
-                if content is not None:
-                    reply_text += content
+        for token in response:
+            content = token["choices"][0]["delta"].get("content")
+            if content is not None:
+                reply_text += content
 
         logging.info(f"Reply text: {reply_text}")
     except Exception as e:
