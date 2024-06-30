@@ -21,13 +21,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Функция для обработки сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
+    logging.info(f"Received message: {user_message}")
     try:
         response = g4f.ChatCompletion.create(
             model='gpt-3.5-turbo',  # или другая модель, если необходимо
             messages=[{"role": "user", "content": user_message}]
         )
         logging.info(f"Response: {response}")  # Логирование для проверки структуры ответа
-        reply_text = response['choices'][0]['message']['content']
+        # Убедимся, что response является словарем
+        if isinstance(response, dict):
+            # Логируем ключи для понимания структуры
+            logging.info(f"Response keys: {response.keys()}")
+            # Пытаемся получить текст ответа
+            if 'choices' in response and isinstance(response['choices'], list) and len(response['choices']) > 0:
+                choice = response['choices'][0]
+                if 'message' in choice and isinstance(choice['message'], dict) and 'content' in choice['message']:
+                    reply_text = choice['message']['content']
+                elif 'text' in choice:  # В некоторых случаях текст может быть просто в 'text'
+                    reply_text = choice['text']
+                else:
+                    raise ValueError("Unexpected response structure")
+            else:
+                raise ValueError("Unexpected response structure")
+        else:
+            raise TypeError("Response is not a dictionary")
     except Exception as e:
         logging.error(f"Ошибка при генерации ответа: {e}")
         reply_text = "Извините, произошла ошибка при обработке вашего сообщения."
