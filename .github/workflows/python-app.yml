@@ -32,7 +32,7 @@ jobs:
     - name: Run main.py
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        HUGGING_FACE_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
+        TOKEN_GPT_API_1: ${{ secrets.TOKEN_GPT_API_1 }}
       run: |
         set +x  # Отключаем отображение команд и их аргументов
         python main.py
