@@ -4,7 +4,7 @@ import nest_asyncio
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import g4f
-from g4f.Provider import Bard, Bing, HuggingChat, OpenAssistant, OpenaiChat
+from g4f.Provider import RetryProvider, OpenaiChat, Bard, Bing, HuggingChat, OpenAssistant
 
 # Применение nest_asyncio
 nest_asyncio.apply()
@@ -24,12 +24,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_message = update.message.text
     logging.info(f"Received message: {user_message}")
     try:
-        # Логирование всех доступных провайдеров
-        available_providers = g4f.Provider.get_providers()
-        logging.info(f"Available providers: {available_providers}")
-        
-        # Выбор первого доступного провайдера
-        provider = available_providers[0]
+        # Использование RetryProvider для управления провайдерами
+        provider = RetryProvider([OpenaiChat, Bard, Bing, HuggingChat, OpenAssistant])
         logging.info(f"Using provider: {provider}")
 
         response = g4f.ChatCompletion.create(
