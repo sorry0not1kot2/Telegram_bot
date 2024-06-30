@@ -18,8 +18,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
     try:
-        response = g4f.ChatCompletion.create(prompt=user_message)
-        reply_text = response['choices'][0]['text']
+        response = g4f.ChatCompletion.create(
+            model='gpt-3.5-turbo',  # или другая модель, если необходимо
+            messages=[{"role": "user", "content": user_message}]
+        )
+        reply_text = response['choices'][0]['message']['content']
     except Exception as e:
         logging.error(f"Ошибка при генерации ответа: {e}")
         reply_text = "Извините, произошла ошибка при обработке вашего сообщения."
