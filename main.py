@@ -4,6 +4,7 @@ import nest_asyncio
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 import g4f
+from g4f.Provider import Bard, Bing, HuggingChat, OpenAssistant, OpenaiChat
 
 # Применение nest_asyncio
 nest_asyncio.apply()
