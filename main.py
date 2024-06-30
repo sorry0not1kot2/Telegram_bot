@@ -29,7 +29,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         logging.info(f"Using provider: {provider}")
 
         response = g4f.ChatCompletion.create(
-            model='gpt-3.5-turbo',  # или другая модель, если необходимо
+            model='gpt-4',  # или другая модель, если необходимо
             messages=[{"role": "user", "content": user_message}],
             provider=provider  # Указываем выбранного провайдера
         )
