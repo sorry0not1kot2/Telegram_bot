@@ -3,8 +3,7 @@ import os
 import nest_asyncio
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import g4f
-from g4f.Provider import RetryProvider, OpenaiChat, Bard, Bing, HuggingChat, OpenAssistant
+import openai
 
 # Применение nest_asyncio
 nest_asyncio.apply()
@@ -15,6 +14,10 @@ logging.basicConfig(
     level=logging.DEBUG  # Уровень DEBUG для более подробных логов
 )
 
+# Установка токена Hugging Face
+openai.api_key = os.getenv('HUGGING_FACE_TOKEN')  # Убедитесь, что токен установлен в переменных окружения
+openai.api_base = "http://localhost:1337/v1"  # Установка базового URL для локального сервера
+
 # Функция для обработки команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text('Привет! Я бот, использующий GPT-4. Напиши мне что-нибудь!')
@@ -24,32 +27,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_message = update.message.text
     logging.info(f"Received message: {user_message}")
     try:
-        # Использование RetryProvider для управления провайдерами
-        provider = RetryProvider([OpenaiChat, Bard, Bing, HuggingChat, OpenAssistant])
-        logging.info(f"Using provider: {provider}")
-
-        response = g4f.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model='gpt-4',  # или другая модель, если необходимо
             messages=[{"role": "user", "content": user_message}],
-            provider=provider  # Указываем выбранного провайдера
+            stream=True
         )
-        logging.info(f"Raw response type: {type(response)}")
-        logging.info(f"Raw response: {response}")  # Логирование для проверки структуры ответа
         
+        reply_text = ""
         if isinstance(response, dict):
-            logging.info(f"Response keys: {response.keys()}")
-            if 'choices' in response and isinstance(response['choices'], list) and len(response['choices']) > 0:
-                choice = response['choices'][0]
-                if 'message' in choice and isinstance(choice['message'], dict) and 'content' in choice['message']:
-                    reply_text = choice['message']['content']
-                elif 'text' in choice:
-                    reply_text = choice['text']
-                else:
-                    raise ValueError("Unexpected response structure")
-            else:
-                raise ValueError("Unexpected response structure")
+            reply_text = response['choices'][0]['message']['content']
         else:
-            raise TypeError("Response is not a dictionary")
+            for token in response:
+                content = token["choices"][0]["delta"].get("content")
+                if content is not None:
+                    reply_text += content
+
+        logging.info(f"Reply text: {reply_text}")
     except Exception as e:
         logging.error(f"Ошибка при генерации ответа: {e}", exc_info=True)  # Добавлено exc_info=True для полного трейсбека
         reply_text = "Извините, произошла ошибка при обработке вашего сообщения."
