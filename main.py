@@ -27,17 +27,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             model='gpt-3.5-turbo',  # или другая модель, если необходимо
             messages=[{"role": "user", "content": user_message}]
         )
-        logging.info(f"Response: {response}")  # Логирование для проверки структуры ответа
-        # Убедимся, что response является словарем
+        logging.info(f"Raw response type: {type(response)}")
+        logging.info(f"Raw response: {response}")  # Логирование для проверки структуры ответа
+        
         if isinstance(response, dict):
-            # Логируем ключи для понимания структуры
             logging.info(f"Response keys: {response.keys()}")
-            # Пытаемся получить текст ответа
             if 'choices' in response and isinstance(response['choices'], list) and len(response['choices']) > 0:
                 choice = response['choices'][0]
                 if 'message' in choice and isinstance(choice['message'], dict) and 'content' in choice['message']:
                     reply_text = choice['message']['content']
-                elif 'text' in choice:  # В некоторых случаях текст может быть просто в 'text'
+                elif 'text' in choice:
                     reply_text = choice['text']
                 else:
                     raise ValueError("Unexpected response structure")
