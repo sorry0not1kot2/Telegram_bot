@@ -23,13 +23,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_message = update.message.text
     logging.info(f"Received message: {user_message}")
     try:
-        # Логирование используемого провайдера
-        provider = g4f.ChatCompletion.get_provider()
+        # Логирование всех доступных провайдеров
+        available_providers = g4f.Provider.get_providers()
+        logging.info(f"Available providers: {available_providers}")
+        
+        # Выбор первого доступного провайдера
+        provider = available_providers[0]
         logging.info(f"Using provider: {provider}")
 
         response = g4f.ChatCompletion.create(
             model='gpt-3.5-turbo',  # или другая модель, если необходимо
-            messages=[{"role": "user", "content": user_message}]
+            messages=[{"role": "user", "content": user_message}],
+            provider=provider  # Указываем выбранного провайдера
         )
         logging.info(f"Raw response type: {type(response)}")
         logging.info(f"Raw response: {response}")  # Логирование для проверки структуры ответа
