@@ -17,8 +17,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 # Функция для обработки сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_message = update.message.text
-    response = g4f.generate(user_message)
-    await update.message.reply_text(response)
+    try:
+        response = g4f.ChatCompletion.create(prompt=user_message)
+        reply_text = response['choices'][0]['text']
+    except Exception as e:
+        logging.error(f"Ошибка при генерации ответа: {e}")
+        reply_text = "Извините, произошла ошибка при обработке вашего сообщения."
+    await update.message.reply_text(reply_text)
 
 # Основная функция для запуска бота
 def main() -> None:
