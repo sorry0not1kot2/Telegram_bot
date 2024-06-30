@@ -10,7 +10,7 @@ nest_asyncio.apply()
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
     level=logging.DEBUG  # Уровень DEBUG для более подробных логов
 )
 
