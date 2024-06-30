@@ -9,12 +9,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Настройка бота
-bot = AsyncTeleBot(os.getenv('TELEGRAM_BOT_TOKEN'))
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+bot = AsyncTeleBot(BOT_TOKEN)
+
+# Получение имени пользователя бота
+bot_info = asyncio.run(bot.get_me())
+bot_username = bot_info.username
 
 async def get_gpt_response(query):
     try:
         response = await g4f.ChatCompletion.create_async(
-            model="gpt-4o",
+            model="gpt-4",
             messages=[{"role": "user", "content": query}],
         )
         return response
@@ -22,7 +27,7 @@ async def get_gpt_response(query):
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Произошла ошибка при обращении к GPT: {str(e)}"
 
-@bot.message_handler(func=lambda message: True)
+@bot.message_handler(func=lambda message: bot_username in message.text)
 async def handle_message(message):
     query = message.text
     
