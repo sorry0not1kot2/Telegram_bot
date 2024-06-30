@@ -14,7 +14,6 @@ permissions:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -34,4 +33,5 @@ jobs:
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       run: |
+        set +x  # Отключаем отображение команд и их аргументов
         python main.py
