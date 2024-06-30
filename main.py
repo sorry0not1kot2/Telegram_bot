@@ -11,7 +11,7 @@ nest_asyncio.apply()
 # Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.DEBUG  # Уровень DEBUG для более подробных логов
 )
 
 # Функция для обработки команды /start
@@ -23,6 +23,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_message = update.message.text
     logging.info(f"Received message: {user_message}")
     try:
+        # Логирование используемого провайдера
+        provider = g4f.ChatCompletion.get_provider()
+        logging.info(f"Using provider: {provider}")
+
         response = g4f.ChatCompletion.create(
             model='gpt-3.5-turbo',  # или другая модель, если необходимо
             messages=[{"role": "user", "content": user_message}]
@@ -45,7 +49,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         else:
             raise TypeError("Response is not a dictionary")
     except Exception as e:
-        logging.error(f"Ошибка при генерации ответа: {e}")
+        logging.error(f"Ошибка при генерации ответа: {e}", exc_info=True)  # Добавлено exc_info=True для полного трейсбека
         reply_text = "Извините, произошла ошибка при обработке вашего сообщения."
     await update.message.reply_text(reply_text)
 
