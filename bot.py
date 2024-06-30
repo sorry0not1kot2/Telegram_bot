@@ -23,6 +23,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 # Основная функция для запуска бота
 def main() -> None:
     token = os.getenv('TELEGRAM_BOT_TOKEN')
+    if not token:
+        raise ValueError("TELEGRAM_BOT_TOKEN is not set")
     application = ApplicationBuilder().token(token).build()
 
     application.add_handler(CommandHandler('start', start))
