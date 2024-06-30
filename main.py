@@ -26,6 +26,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             model='gpt-3.5-turbo',  # или другая модель, если необходимо
             messages=[{"role": "user", "content": user_message}]
         )
+        logging.info(f"Response: {response}")  # Логирование для проверки структуры ответа
         reply_text = response['choices'][0]['message']['content']
     except Exception as e:
         logging.error(f"Ошибка при генерации ответа: {e}")
