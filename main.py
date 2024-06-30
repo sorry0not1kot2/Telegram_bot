@@ -27,18 +27,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     user_message = update.message.text
     logging.info(f"Received message: {user_message}")
     try:
-        response = openai.ChatCompletion.create(
-            model='gpt-4',  # или другая модель, если необходимо
-            messages=[{"role": "user", "content": user_message}],
-            stream=True
+        response = openai.Completion.create(
+            engine="gpt-4",  # или другая модель, если необходимо
+            prompt=user_message,
+            max_tokens=150
         )
-        
-        reply_text = ""
-        for token in response:
-            content = token["choices"][0]["delta"].get("content")
-            if content is not None:
-                reply_text += content
-
+        reply_text = response.choices[0].text
         logging.info(f"Reply text: {reply_text}")
     except Exception as e:
         logging.error(f"Ошибка при генерации ответа: {e}", exc_info=True)  # Добавлено exc_info=True для полного трейсбека
