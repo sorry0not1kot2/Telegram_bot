@@ -1,10 +1,8 @@
 import asyncio
 import logging
 import os
-from openai import OpenAI
+from neurogpt import NeuroGPT
 from telebot.async_telebot import AsyncTeleBot
-
-
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -21,16 +19,16 @@ bot_username = bot_info.username
 # Хранение данных по разговорам
 conversation_data = {}
 
-# Создание клиента OpenAI
-openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Создание клиента NeuroGPT
+neurogpt_client = NeuroGPT()
 
 async def get_gpt_response(query):
     try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4-turbo",
-            messages=[{"role": "user", "content": query}],
+        response = await neurogpt_client.generate(
+            model="gpt-4",
+            prompt=query
         )
-        return response.choices[0].message['content']
+        return response['text']
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
