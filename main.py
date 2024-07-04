@@ -91,10 +91,10 @@ if __name__ == '__main__':
 #        )
 
 import os
+import asyncio
 import logging
 from telebot.async_telebot import AsyncTeleBot
 from g4f import Provider, ChatCompletion
-import asyncio
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -113,7 +113,7 @@ bot_username = bot_info.username
 # Хранение данных по разговорам (инициализация)
 conversation_data = {}
 
-# Функция для получения ответа от GPT-4 через Claude-3-Sonnet
+# Функция для получения ответа от GPT-4 через GeekGPT
 async def get_gpt_response(query):
     try:
         response = await ChatCompletion.create(
@@ -143,7 +143,7 @@ async def handle_message(message):
         logger.info(f"Получен запрос: {query}")
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
         
-        # Используем get_gpt_response для получения ответа от Claude-3-Sonnet
+        # Используем get_gpt_response для получения ответа от GeekGPT
         response = await get_gpt_response(query)
         
         await bot.reply_to(message, response)
@@ -161,14 +161,17 @@ async def main():
 
 # Запуск бота
 if __name__ == '__main__':
-    # Создаем и запускаем событийный цикл
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+
+    def handle_sigint(sig, frame):
+        loop.stop()
+
+    signal.signal(signal.SIGINT, handle_sigint)
+
     try:
         loop.run_until_complete(main())
     except KeyboardInterrupt:
         logger.info("Бот остановлен")
     finally:
-        # Закрываем событийный цикл
         loop.close()
-        
