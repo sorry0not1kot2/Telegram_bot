@@ -152,7 +152,9 @@ async def main():
     except Exception as e:
         logger.error(f"Ошибка при работе бота: {str(e)}")
 
-# Запуск бота
 if __name__ == '__main__':
-    asyncio.run(main())
-
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        logger.info("Бот остановлен")
