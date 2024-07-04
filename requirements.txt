@@ -1,5 +1,5 @@
 python-telegram-bot==20.0
-neurogpt
+g4f
 curl_cffi
 nest_asyncio
 pyTelegramBotAPI
