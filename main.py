@@ -91,6 +91,7 @@ if __name__ == '__main__':
 #        )
 
 import os
+import logging
 from telebot.async_telebot import AsyncTeleBot
 from g4f import Provider, ChatCompletion
 import asyncio
