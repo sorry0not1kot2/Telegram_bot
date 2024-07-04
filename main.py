@@ -71,11 +71,29 @@ if __name__ == '__main__':
     asyncio.run(main())
 """
 
-import asyncio
-import logging
+
+
+# Функция для получения ответа от GPT-4 через Claude-3-Sonnet
+#async def get_gpt_response(query):
+#    try:
+#        response = await ChatCompletion.create(
+#            provider=Provider.Bing,
+#            model='gpt-4',
+#            messages=[{"role": "user", "content": query}]
+#        ) 
+
+
+
+#        response = await ChatCompletion.create(
+#            provider=Provider.GeekGpt,
+#            model='gpt-4',
+#            messages=[{"role": "user", "content": query}]
+#        )
+
 import os
 from telebot.async_telebot import AsyncTeleBot
 from g4f import Provider, ChatCompletion
+import asyncio
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -97,23 +115,11 @@ conversation_data = {}
 # Функция для получения ответа от GPT-4 через Claude-3-Sonnet
 async def get_gpt_response(query):
     try:
-#        response = await ChatCompletion.create(
-#            provider=Provider.Bing,
-#            model='gpt-4',
-#            messages=[{"role": "user", "content": query}]
-#        ) 
-
         response = await ChatCompletion.create(
-        provider=Provider.GeekGpt,
-        model='gpt-4',
-        messages=[{"role": "user", "content": query}]
-    )
-#        response = await ChatCompletion.create(
-#            provider=Provider.GeekGpt,
-#            model='gpt-4',
-#            messages=[{"role": "user", "content": query}]
-#        )
-
+            provider=Provider.GeekGpt,
+            model='gpt-4',
+            messages=[{"role": "user", "content": query}]
+        )
         return response['choices'][0]['message']['content']
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
@@ -145,6 +151,14 @@ async def handle_message(message):
         await bot.reply_to(message, "Введите сообщение.")
 
 # Функция для запуска бота
+async def main():
+    try:
+        logger.info("Запуск бота...")
+        await bot.polling(non_stop=True, timeout=60)
+    except Exception as e:
+        logger.error(f"Ошибка при работе бота: {str(e)}")
+
+# Запуск бота
 if __name__ == '__main__':
     # Создаем и запускаем событийный цикл
     loop = asyncio.new_event_loop()
@@ -156,3 +170,4 @@ if __name__ == '__main__':
     finally:
         # Закрываем событийный цикл
         loop.close()
+        
