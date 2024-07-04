@@ -98,8 +98,8 @@ conversation_data = {}
 async def get_gpt_response(query):
     try:
         response = await ChatCompletion.create(
-            provider=Provider.You,
-            model='claude-3-sonnet',
+            provider=Provider.Bing,
+            model='gpt-4',
             messages=[{"role": "user", "content": query}]
         )
         return response['choices'][0]['message']['content']
