@@ -3,3 +3,4 @@ g4f
 curl_cffi
 nest_asyncio
 pyTelegramBotAPI
+nodriver
