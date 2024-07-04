@@ -104,10 +104,10 @@ async def get_gpt_response(query):
 #        ) 
 
         response = await ChatCompletion.create(
-            provider=Provider.GeekGpt,
-            model='gpt-4',
-            messages=[{"role": "user", "content": query}]
-        )
+        provider=Provider.GeekGpt,
+        model='gpt-4',
+        messages=[{"role": "user", "content": query}]
+    )
 #        response = await ChatCompletion.create(
 #            provider=Provider.GeekGpt,
 #            model='gpt-4',
@@ -145,13 +145,6 @@ async def handle_message(message):
         await bot.reply_to(message, "Введите сообщение.")
 
 # Функция для запуска бота
-async def main():
-    try:
-        logger.info("Запуск бота...")
-        await bot.polling(non_stop=True, timeout=60)
-    except Exception as e:
-        logger.error(f"Ошибка при работе бота: {str(e)}")
-
 if __name__ == '__main__':
     # Создаем и запускаем событийный цикл
     loop = asyncio.new_event_loop()
