@@ -97,11 +97,23 @@ conversation_data = {}
 # Функция для получения ответа от GPT-4 через Claude-3-Sonnet
 async def get_gpt_response(query):
     try:
+#        response = await ChatCompletion.create(
+#            provider=Provider.Bing,
+#            model='gpt-4',
+#            messages=[{"role": "user", "content": query}]
+#        ) 
+
         response = await ChatCompletion.create(
-            provider=Provider.Bing,
+            provider=Provider.GeekGpt,
             model='gpt-4',
             messages=[{"role": "user", "content": query}]
         )
+#        response = await ChatCompletion.create(
+#            provider=Provider.GeekGpt,
+#            model='gpt-4',
+#            messages=[{"role": "user", "content": query}]
+#        )
+
         return response['choices'][0]['message']['content']
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
