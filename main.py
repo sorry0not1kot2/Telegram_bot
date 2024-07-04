@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import os
-from neurogpt import NeuroGPT
 from telebot.async_telebot import AsyncTeleBot
+from g4f import Provider, ChatCompletion
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -10,25 +10,23 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if not BOT_TOKEN:
+    raise ValueError("Не установлен TELEGRAM_BOT_TOKEN")
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Получение имени пользователя бота
 bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
-# Хранение данных по разговорам
-conversation_data = {}
-
-# Создание клиента NeuroGPT
-neurogpt_client = NeuroGPT()
-
+# Функция для получения ответа от GPT-4 через Claude-3-Sonnet
 async def get_gpt_response(query):
     try:
-        response = await neurogpt_client.generate(
-            model="gpt-4",
-            prompt=query
+        response = await ChatCompletion.create(
+            provider=Provider.You,
+            model='claude-3-sonnet',
+            messages=[{"role": "user", "content": query}]
         )
-        return response['text']
+        return response['choices'][0]['message']['content']
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
@@ -50,6 +48,7 @@ async def handle_message(message):
         logger.info(f"Получен запрос: {query}")
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
         
+        # Используем get_gpt_response для получения ответа от Claude-3-Sonnet
         response = await get_gpt_response(query)
         
         await bot.reply_to(message, response)
@@ -61,7 +60,7 @@ async def handle_message(message):
 async def main():
     try:
         logger.info("Запуск бота...")
-        await bot.polling(none_stop=True, timeout=60)
+        await bot.polling(non_stop=True, timeout=60)
     except Exception as e:
         logger.error(f"Ошибка при работе бота: {str(e)}")
 
