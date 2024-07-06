@@ -1,3 +1,5 @@
+# python-app.yml
+
 name: Python application
 
 on:
@@ -26,6 +28,7 @@ jobs:
           pip install -r requirements.txt
           pip install -U g4f
           pip install flake8 pytest
+          pip install pyTelegramBotAPI aiohttp
     
       - name: Lint with flake8
         run: |
@@ -43,4 +46,3 @@ jobs:
         with:
          name: gpt-response
          path: response.json
-
