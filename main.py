@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from g4f import ChatCompletion, Provider
+from g4f import ChatCompletion, Bing  # Импортируем Bing напрямую
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -29,8 +29,8 @@ async def handle_message(message):
         try:
             # Отправка запроса к Bing Chat
             response = await ChatCompletion.create_async(
-                model=None,  # Убираем model="bing"
-                provider=Provider.Bing,
+                model=None,
+                provider=Bing,  # Используем Bing напрямую
                 messages=[{"role": "user", "content": query}]
             )
 
@@ -44,6 +44,7 @@ async def handle_message(message):
             await bot.reply_to(message, "Извините, произошла ошибка.")
     else:
         await bot.reply_to(message, "Введите сообщение.")
+
 
 # Функция для запуска бота
 async def main():
