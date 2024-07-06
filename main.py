@@ -28,7 +28,8 @@ async def get_response(text):
                 model="claude-3-sonnet",
                 provider=provider,
                 messages=[{"role": "user", "content": text}],
-                max_tokens=1024
+                max_tokens=1024,
+                no_sandbox=True  # Добавляем параметр no_sandbox
             )
             return response['choices'][0]['message']['content']
         except Exception as e:
