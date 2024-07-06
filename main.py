@@ -3,8 +3,6 @@ import logging
 import os
 import g4f
 from telebot.async_telebot import AsyncTeleBot
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -21,15 +19,10 @@ bot_username = bot_info.username
 # Хранение данных по разговорам
 conversation_data = {}
 
-# Настройка браузера с параметром --no-sandbox
-options = Options()
-options.add_argument("--no-sandbox")
-driver = webdriver.Chrome(options=options)
-
 async def get_gpt_response(query):
     try:
         response = await g4f.ChatCompletion.create_async(
-            model="claude-3-sonnet",
+            model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
         return response
@@ -71,4 +64,4 @@ async def main():
 
 # Запуск бота
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(main()
