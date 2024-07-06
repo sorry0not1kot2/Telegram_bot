@@ -24,7 +24,11 @@ async def get_gpt_response(query):
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-        return response['choices'][0]['message']['content']
+        # Проверка структуры ответа
+        if 'choices' in response and len(response['choices']) > 0:
+            return response['choices'][0]['message']['content']
+        else:
+            return "Извините, не удалось получить ответ от GPT-4."
     except Exception as e:
         logger.error(f"Ошибка при использовании GPT-4: {e}")
         return "Извините, все провайдеры недоступны в данный момент."
