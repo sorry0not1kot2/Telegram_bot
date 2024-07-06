@@ -5,5 +5,5 @@ nest_asyncio
 pyTelegramBotAPI
 nodriver
 selenium==4.10.0
-install browser-cookie3
+browser-cookie3
 
