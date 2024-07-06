@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from gpt4free import use, Provider
+from g4f import use, Provider
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
