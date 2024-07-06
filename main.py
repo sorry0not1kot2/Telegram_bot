@@ -29,8 +29,8 @@ async def handle_message(message):
         try:
             # Отправка запроса к Bing Chat
             response = await ChatCompletion.create_async(
-                model="bing",  # Используем модель "bing"
-                provider=Provider.Bing, # Используем провайдера Bing
+                model=None,  # Убираем model="bing"
+                provider=Provider.Bing,
                 messages=[{"role": "user", "content": query}]
             )
 
@@ -44,7 +44,6 @@ async def handle_message(message):
             await bot.reply_to(message, "Извините, произошла ошибка.")
     else:
         await bot.reply_to(message, "Введите сообщение.")
-
 
 # Функция для запуска бота
 async def main():
