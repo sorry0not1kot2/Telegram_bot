@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from g4f import ChatCompletion
+from g4f import ChatCompletion, Provider, models
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -20,9 +20,8 @@ bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
 # Определение модели и провайдера
-MODEL = "claude-3-sonnet"
-PROVIDER = "YourProvider"  # ВАЖНО: Замените "YourProvider" на реального провайдера из g4f
-
+MODEL = models.gpt_4  # Или другая доступная модель
+PROVIDER = Provider.Browser  # Используем модель имитацию браузера
 # Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
         message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
@@ -34,8 +33,8 @@ async def handle_message(message):
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
 
         try:
-            # Добавленное логирование
-            logger.info(f"Отправка запроса к модели: {MODEL}, провайдер: {PROVIDER}, сообщение: {query}") 
+            # Логирование перед запросом
+            logger.info(f"Отправка запроса к модели: {MODEL}, провайдер: {PROVIDER}, сообщение: {query}")
 
             response = await ChatCompletion.create_async(
                 model=MODEL,
@@ -46,7 +45,7 @@ async def handle_message(message):
             await bot.reply_to(message, chat_gpt_response)
             logger.info("Ответ отправлен")
         except Exception as e:
-            logger.exception(f"Ошибка при обработке запроса:")  # Подробный лог ошибки
+            logger.exception(f"Ошибка при обработке запроса:")
             await bot.reply_to(message, "Извините, произошла ошибка.")
     else:
         await bot.reply_to(message, "Введите сообщение.")
@@ -57,7 +56,7 @@ async def main():
         logger.info("Запуск бота...")
         await bot.polling(none_stop=True)
     except Exception as e:
-        logger.exception(f"Ошибка при работе бота:")  # Подробный лог ошибки
+        logger.exception(f"Ошибка при работе бота:")
 
 # Запуск бота
 if __name__ == '__main__':
