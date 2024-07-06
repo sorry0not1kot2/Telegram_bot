@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from g4f import Model, ChatCompletion
+from g4f import ChatCompletion
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -19,13 +19,9 @@ conversation_data = {}
 bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
-# Определение модели
-# ВАЖНО: Замените "YourProvider" на реального провайдера из g4f
-claude_3_sonnet = Model(
-    name='claude-3-sonnet',
-    base_provider='anthropic',
-    best_provider='YourProvider' 
-)
+# Определение модели и провайдера
+MODEL = "claude-3-sonnet"
+PROVIDER = "You"  # ВАЖНО: Замените "You" на реального провайдера из g4f
 
 # Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
@@ -39,7 +35,8 @@ async def handle_message(message):
 
         try:
             response = await ChatCompletion.create_async(
-                model=claude_3_sonnet,
+                model=MODEL,
+                provider=PROVIDER,
                 messages=[{"role": "user", "content": query}]
             )
             chat_gpt_response = response.choices[0].message.content
