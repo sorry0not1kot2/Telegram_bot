@@ -21,7 +21,7 @@ bot_username = bot_info.username
 
 # Определение модели и провайдера
 MODEL = models.gpt_4  # Или другая доступная модель
-PROVIDER = Provider.Browser  # Используем модель имитацию браузера
+PROVIDER = Provider.Bing  # Используем модель имитацию браузера
 # Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
         message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
