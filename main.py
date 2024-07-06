@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import os
-import g4f
 from telebot.async_telebot import AsyncTeleBot
+from g4f import ChatCompletion, models, Provider
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -16,38 +16,10 @@ bot = AsyncTeleBot(BOT_TOKEN)
 bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
-# Хранение данных по разговорам
-conversation_data = {}
+# Создание новой беседы Bing
+conversation = asyncio.run(models.bing.create_conversation())
 
-
-async def get_gpt_response(query):
-    try:
-        response = await g4f.ChatCompletion.create_async(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": query}],
-        )
-        # Возвращаем текст ответа от GPT
-        logger.info(f"Тип объекта response: {type(response)}")
-        logger.info(f"Содержимое response: {response}")
-
-        return response.choices[0].message.content
-    except Exception as e:
-        logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
-        return f"Ошибка при получении ответа от GPT: {str(e)}"
-
-
-@bot.message_handler(commands=['start'])
-async def handle_start_command(message):
-    await bot.send_message(message.chat.id,
-                           f"Привет! Я - GPT-бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
-
-
-@bot.message_handler(commands=['clear'])
-async def handle_clear_command(message):
-    conversation_data.pop(message.chat.id, None)
-    await bot.send_message(message.chat.id, "Данные очищены.")
-
-
+# Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
         message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
 async def handle_message(message):
@@ -57,11 +29,22 @@ async def handle_message(message):
         logger.info(f"Получен запрос: {query}")
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
 
-        response = await get_gpt_response(query)
+        try:
+            # Отправка запроса к Bing Chat
+            response = await ChatCompletion.create_async(
+                model=models.bing,
+                conversation=conversation,
+                messages=[{"role": "user", "content": query}]
+            )
 
-        # Отправляем сообщение с парсингом MarkdownV2
-        await bot.reply_to(message, response, parse_mode="MarkdownV2")
-        logger.info("Ответ отправлен")
+            # Отправка ответа пользователю
+            chat_gpt_response = response.choices[0].message.content
+            await bot.reply_to(message, chat_gpt_response)
+            logger.info("Ответ отправлен")
+
+        except Exception as e:
+            logger.exception(f"Ошибка при обработке запроса:")
+            await bot.reply_to(message, "Извините, произошла ошибка.")
     else:
         await bot.reply_to(message, "Введите сообщение.")
 
@@ -70,9 +53,9 @@ async def handle_message(message):
 async def main():
     try:
         logger.info("Запуск бота...")
-        await bot.polling(none_stop=True, timeout=60)
+        await bot.polling(none_stop=True)
     except Exception as e:
-        logger.error(f"Ошибка при работе бота: {str(e)}")
+        logger.exception(f"Ошибка при работе бота:")
 
 
 # Запуск бота
