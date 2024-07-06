@@ -7,7 +7,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from g4f import use, Provider
+from g4f.Provider import You
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
-# Установка провайдера без API-ключей
-provider = use('claude')
+# Настройка провайдера
+provider = You()
 
 # Функция обработки команды /start
 async def start(message):
@@ -26,14 +26,17 @@ async def start(message):
 
 # Функция обработки сообщений 
 async def message_handler(message):
-    # Получение текста сообщения
     text = message.text
     
-    # Генерация ответа с помощью GPT-4
-    response = provider.Completion.create(prompt=text, max_tokens=1024)
+    # Генерация ответа с помощью модели claude-3-sonnet
+    response = provider.Completion.create(
+        model="claude-3-sonnet",
+        messages=[{"role": "user", "content": text}],
+        max_tokens=1024
+    )
     
     # Отправка ответа в чат
-    await bot.send_message(chat_id=message.chat.id, text=response.text)
+    await bot.send_message(chat_id=message.chat.id, text=response.choices[0].message.content)
 
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
