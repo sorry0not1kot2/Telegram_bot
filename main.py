@@ -34,13 +34,17 @@ async def get_gpt_response(chat_id, query):
             messages=history,
         )
         
-        # Добавление ответа модели в историю
-        history.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
+        if isinstance(response, dict) and 'choices' in response:
+            choice = response['choices'][0]
+            if isinstance(choice, dict) and 'message' in choice:
+                message = choice['message']
+                if isinstance(message, dict) and 'content' in message:
+                    content = message['content']
+                    history.append({"role": "assistant", "content": content})
+                    chat_histories[chat_id] = history
+                    return content
         
-        # Сохранение обновленной истории
-        chat_histories[chat_id] = history
-        
-        return response['choices'][0]['message']['content']
+        raise ValueError("Unexpected response format")
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
@@ -62,6 +66,7 @@ bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
 asyncio.run(bot.polling())
+
 
 """
 import asyncio
