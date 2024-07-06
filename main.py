@@ -22,7 +22,7 @@ conversation_data = {}
 async def get_gpt_response(query):
     try:
         response = await g4f.ChatCompletion.create_async(
-            model="gpt-4o",
+            model="claude-3-sonnet",
             messages=[{"role": "user", "content": query}],
         )
         return response
