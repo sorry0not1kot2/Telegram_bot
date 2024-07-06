@@ -45,4 +45,3 @@ bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
 asyncio.run(bot.polling())
-
