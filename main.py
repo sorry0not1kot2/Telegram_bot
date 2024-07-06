@@ -26,7 +26,8 @@ async def get_gpt_response(query):
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-        return response.choices[0].message.content
+        # Возвращаем текст ответа от GPT
+        return response.choices[0].message.content  
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
