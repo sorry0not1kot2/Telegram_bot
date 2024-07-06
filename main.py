@@ -1,3 +1,8 @@
+# 
+#
+#
+# файл mmain.py
+
 import asyncio
 import logging
 import os
@@ -10,9 +15,10 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+bot = AsyncTeleBot(BOT_TOKEN)
 
 # Установка провайдера без API-ключей
-use('claude')
+provider = use('claude')
 
 # Функция обработки команды /start
 async def start(message):
@@ -24,13 +30,10 @@ async def message_handler(message):
     text = message.text
     
     # Генерация ответа с помощью GPT-4
-    response = use('claude').Completion.create(prompt=text, max_tokens=1024)
+    response = provider.Completion.create(prompt=text, max_tokens=1024)
     
     # Отправка ответа в чат
     await bot.send_message(chat_id=message.chat.id, text=response.text)
-
-# Настройка бота
-bot = AsyncTeleBot(BOT_TOKEN)
 
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
