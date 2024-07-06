@@ -7,7 +7,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from g4f.Provider import You
+import g4f
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,8 +17,23 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
-# Настройка провайдера
-provider = You()
+# Список провайдеров
+providers = [g4f.Provider.You]
+
+# Функция для получения ответа от провайдера
+async def get_response(text):
+    for provider in providers:
+        try:
+            response = g4f.ChatCompletion.create(
+                model="claude-3-sonnet",
+                provider=provider,
+                messages=[{"role": "user", "content": text}],
+                max_tokens=1024
+            )
+            return response['choices'][0]['message']['content']
+        except Exception as e:
+            logger.error(f"Ошибка при использовании провайдера {provider}: {e}")
+    return "Извините, все провайдеры недоступны в данный момент."
 
 # Функция обработки команды /start
 async def start(message):
@@ -27,16 +42,8 @@ async def start(message):
 # Функция обработки сообщений 
 async def message_handler(message):
     text = message.text
-    
-    # Генерация ответа с помощью модели claude-3-sonnet
-    response = provider.Completion.create(
-        model="claude-3-sonnet",
-        prompt=text,
-        max_tokens=1024
-    )
-    
-    # Отправка ответа в чат
-    await bot.send_message(chat_id=message.chat.id, text=response['choices'][0]['text'])
+    response_text = await get_response(text)
+    await bot.send_message(chat_id=message.chat.id, text=response_text)
 
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
