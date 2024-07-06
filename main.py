@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
-from g4f import ChatCompletion, models, Provider
+from g4f import ChatCompletion, Provider
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +17,7 @@ bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
 # Создание новой беседы Bing
-conversation = asyncio.run(models.bing.create_conversation())
+conversation = asyncio.run(Provider.Bing.create_conversation())
 
 # Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
@@ -32,7 +32,8 @@ async def handle_message(message):
         try:
             # Отправка запроса к Bing Chat
             response = await ChatCompletion.create_async(
-                model=models.bing,
+                model="bing",  # Используем модель "bing"
+                provider=Provider.Bing, # Используем провайдера Bing
                 conversation=conversation,
                 messages=[{"role": "user", "content": query}]
             )
