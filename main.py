@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Настройка бота
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')  # Убедитесь, что переменная окружения установлена
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Словарь для хранения истории сообщений
@@ -53,7 +53,7 @@ async def get_gpt_response(chat_id, query):
                     chat_histories[chat_id] = history
                     return content
         
-        raise ValueError("Неожиданный формат ответа")
+        raise ValueError("Unexpected response format")
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
@@ -75,17 +75,18 @@ bot.register_message_handler(message_handler, content_types=['text'])
 
 # Проверка инициализации бота
 async def main():
+    await bot.get_me()
+    if bot.user is None:
+        logger.error("Не удалось получить информацию о боте. Проверьте токен.")
+        return
     try:
-        await bot.get_me()
-        if bot.user is None:
-            logger.error("Не удалось получить информацию о боте. Проверьте токен.")
-            return
-        await bot.polling()
+        await bot.polling(none_stop=True, interval=1, timeout=20)
     finally:
-        await bot.close()  # Правильно закрываем сессию бота
+        await bot.close_session()
 
 # Запуск бота
 asyncio.run(main())
+
 
 
 
