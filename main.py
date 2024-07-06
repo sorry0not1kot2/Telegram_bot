@@ -18,7 +18,7 @@ BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Список провайдеров
-providers = [g4f.Provider.OpenAI, g4f.Provider.GPT4Free]
+providers = [g4f.Provider.Openai, g4f.Provider.GPT4Free]
 
 # Функция для получения ответа от провайдера
 async def get_response(text):
