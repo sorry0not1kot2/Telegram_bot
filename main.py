@@ -24,14 +24,10 @@ async def get_gpt_response(query):
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-        # Проверка структуры ответа
-        if 'choices' in response and len(response['choices']) > 0:
-            return response['choices'][0]['message']['content']
-        else:
-            return "Извините, не удалось получить ответ от GPT-4."
+        return response
     except Exception as e:
-        logger.error(f"Ошибка при использовании GPT-4: {e}")
-        return "Извините, все провайдеры недоступны в данный момент."
+        logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
+        return f"Ошибка при получении ответа от GPT: {str(e)}"
 
 # Функция обработки команды /start
 async def start(message):
@@ -40,7 +36,14 @@ async def start(message):
 # Функция обработки сообщений 
 async def message_handler(message):
     text = message.text
-    response_text = await get_gpt_response(text)
+    response = await get_gpt_response(text)
+    
+    # Проверка структуры ответа
+    if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
+        response_text = response['choices'][0]['message']['content']
+    else:
+        response_text = response
+    
     await bot.send_message(chat_id=message.chat.id, text=response_text)
 
 # Добавление обработчиков команд и сообщений
