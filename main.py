@@ -8,7 +8,6 @@ import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
 import g4f
-import browser_cookie3  # Убедитесь, что пакет установлен
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -19,14 +18,14 @@ BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Список провайдеров
-providers = [g4f.Provider.Reka]
+providers = [g4f.Provider.OpenAI, g4f.Provider.GPT4Free]
 
 # Функция для получения ответа от провайдера
 async def get_response(text):
     for provider in providers:
         try:
             response = g4f.ChatCompletion.create(
-                model="claude-3-sonnet",
+                model="gpt-4",  # Используем модель gpt-4 для этих провайдеров
                 provider=provider,
                 messages=[{"role": "user", "content": text}],
                 max_tokens=1024
