@@ -1,6 +1,5 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
+# 
+# python-app.yml 
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
@@ -30,9 +29,9 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run main.py
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        run: python main.py
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      run: python main.py
 
     - name: Upload response artifact
       if: failure()
@@ -40,4 +39,3 @@ jobs:
       with:
         name: gpt-response
         path: response.json
-
