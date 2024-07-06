@@ -38,6 +38,7 @@ async def get_gpt_response(chat_id, query):
         # Выводим весь ответ для отладки
         logger.info(f"Ответ от GPT: {response}")
         
+        # Проверка структуры ответа
         if isinstance(response, dict) and 'choices' in response:
             choice = response['choices'][0]
             if isinstance(choice, dict) and 'message' in choice:
