@@ -1,4 +1,4 @@
-# 
+5# 
 #
 #
 # файл mmain.py
@@ -18,17 +18,18 @@ BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Список провайдеров
-providers = [g4f.Provider.Openai, g4f.Provider.Forefront]
+providers = [g4f.Provider.You]
 
 # Функция для получения ответа от провайдера
 async def get_response(text):
     for provider in providers:
         try:
             response = g4f.ChatCompletion.create(
-                model="gpt-4",  # Используем модель gpt-4 для этих провайдеров
+                model="claude-3-sonnet",
                 provider=provider,
                 messages=[{"role": "user", "content": text}],
-                max_tokens=1024
+                max_tokens=1024,
+                no_sandbox=True  # Добавляем параметр no_sandbox
             )
             return response['choices'][0]['message']['content']
         except Exception as e:
@@ -51,3 +52,4 @@ bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
 asyncio.get_event_loop().run_until_complete(bot.polling())
+
