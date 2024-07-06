@@ -8,6 +8,7 @@ import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
 import g4f
+import nest_asyncio
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -51,5 +52,6 @@ bot.register_message_handler(start, commands=['start'])
 bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
-asyncio.get_event_loop().run_until_complete(bot.polling())
+nest_asyncio.apply()
+asyncio.run(bot.polling())
 
