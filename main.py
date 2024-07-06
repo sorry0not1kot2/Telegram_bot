@@ -27,10 +27,11 @@ claude_3_sonnet = Model(
 )
 
 # Обработчик сообщений
-@bot.message_handler(func=lambda message: bot_username in message.text or (message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
+@bot.message_handler(func=lambda message: bot_username in message.text or (
+        message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
 async def handle_message(message):
     query = message.text.replace(f"@{bot_username}", "").strip()
-    
+
     if query:
         logger.info(f"Получен запрос: {query}")
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
@@ -53,7 +54,7 @@ async def handle_message(message):
 async def main():
     try:
         logger.info("Запуск бота...")
-        await bot.polling(none_stop=True, timeout=60)
+        await bot.polling(none_stop=True)  # Поддерживать опрос постоянно
     except Exception as e:
         logger.error(f"Ошибка при работе бота: {str(e)}")
 
