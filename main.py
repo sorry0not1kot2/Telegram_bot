@@ -21,7 +21,7 @@ bot_username = bot_info.username
 
 # Определение модели и провайдера
 MODEL = "claude-3-sonnet"
-PROVIDER = "You"  # ВАЖНО: Замените "You" на реального провайдера из g4f
+PROVIDER = "YourProvider"  # ВАЖНО: Замените "YourProvider" на реального провайдера из g4f
 
 # Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
@@ -34,6 +34,9 @@ async def handle_message(message):
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
 
         try:
+            # Добавленное логирование
+            logger.info(f"Отправка запроса к модели: {MODEL}, провайдер: {PROVIDER}, сообщение: {query}") 
+
             response = await ChatCompletion.create_async(
                 model=MODEL,
                 provider=PROVIDER,
