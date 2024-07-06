@@ -18,7 +18,7 @@ BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Список провайдеров
-providers = [g4f.Provider.You]
+providers = [g4f.Provider.Reka]
 
 # Функция для получения ответа от провайдера
 async def get_response(text):
@@ -28,8 +28,7 @@ async def get_response(text):
                 model="claude-3-sonnet",
                 provider=provider,
                 messages=[{"role": "user", "content": text}],
-                max_tokens=1024,
-                no_sandbox=True  # Добавляем параметр no_sandbox
+                max_tokens=1024
             )
             return response['choices'][0]['message']['content']
         except Exception as e:
