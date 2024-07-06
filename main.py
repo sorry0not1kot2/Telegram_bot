@@ -8,6 +8,7 @@ import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
 import g4f
+import browser_cookie3  # Убедитесь, что пакет установлен
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
