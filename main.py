@@ -29,14 +29,14 @@ async def message_handler(message):
     text = message.text
     
     # Генерация ответа с помощью модели claude-3-sonnet
-    response = provider.Completion.create(
+    response = provider.chat(
         model="claude-3-sonnet",
         messages=[{"role": "user", "content": text}],
         max_tokens=1024
     )
     
     # Отправка ответа в чат
-    await bot.send_message(chat_id=message.chat.id, text=response.choices[0].message.content)
+    await bot.send_message(chat_id=message.chat.id, text=response['choices'][0]['message']['content'])
 
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
