@@ -16,9 +16,6 @@ bot = AsyncTeleBot(BOT_TOKEN)
 bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
-# Создание новой беседы Bing
-conversation = asyncio.run(Provider.Bing.create_conversation())
-
 # Обработчик сообщений
 @bot.message_handler(func=lambda message: bot_username in message.text or (
         message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
@@ -34,13 +31,12 @@ async def handle_message(message):
             response = await ChatCompletion.create_async(
                 model="bing",  # Используем модель "bing"
                 provider=Provider.Bing, # Используем провайдера Bing
-                conversation=conversation,
                 messages=[{"role": "user", "content": query}]
             )
 
             # Отправка ответа пользователю
             chat_gpt_response = response.choices[0].message.content
-            await bot.reply_to(message, chat_gpt_response)
+            await bot.reply_to(message, chat_gpt_response, parse_mode="MarkdownV2")
             logger.info("Ответ отправлен")
 
         except Exception as e:
