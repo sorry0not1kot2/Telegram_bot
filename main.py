@@ -73,9 +73,16 @@ async def message_handler(message):
 bot.register_message_handler(start, commands=['start'])
 bot.register_message_handler(message_handler, content_types=['text'])
 
-# Запуск бота
-asyncio.run(bot.polling())
+# Проверка инициализации бота
+async def main():
+    await bot.get_me()
+    if bot.user is None:
+        logger.error("Не удалось получить информацию о боте. Проверьте токен.")
+        return
+    await bot.polling()
 
+# Запуск бота
+asyncio.run(main())
 
 
 
