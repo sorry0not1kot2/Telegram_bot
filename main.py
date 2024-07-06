@@ -38,6 +38,10 @@ async def get_gpt_response(chat_id, query):
         # Выводим весь ответ для отладки
         logger.info(f"Ответ от GPT: {response}")
         
+        # Сохраняем ответ в файл
+        with open('response.json', 'w') as f:
+            f.write(str(response))
+        
         # Проверка структуры ответа
         if isinstance(response, dict) and 'choices' in response:
             choice = response['choices'][0]
@@ -71,6 +75,7 @@ bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
 asyncio.run(bot.polling())
+
 
 
 
