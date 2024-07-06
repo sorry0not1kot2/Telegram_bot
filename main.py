@@ -8,6 +8,7 @@ import logging
 import os
 from telebot.async_telebot import AsyncTeleBot
 import g4f
+import aiohttp
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -78,10 +79,14 @@ async def main():
     if bot.user is None:
         logger.error("Не удалось получить информацию о боте. Проверьте токен.")
         return
-    await bot.polling()
+    try:
+        await bot.polling()
+    finally:
+        await bot.close_session()
 
 # Запуск бота
 asyncio.run(main())
+
 
 
 
