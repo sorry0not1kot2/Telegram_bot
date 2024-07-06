@@ -19,40 +19,48 @@ bot_username = bot_info.username
 # Хранение данных по разговорам
 conversation_data = {}
 
+
 async def get_gpt_response(query):
     try:
         response = await g4f.ChatCompletion.create_async(
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-        return response
+        return response.choices[0].message.content
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
 
+
 @bot.message_handler(commands=['start'])
 async def handle_start_command(message):
-    await bot.send_message(message.chat.id, f"Привет! Я - GPT-бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
+    await bot.send_message(message.chat.id,
+                           f"Привет! Я - GPT-бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
+
 
 @bot.message_handler(commands=['clear'])
 async def handle_clear_command(message):
     conversation_data.pop(message.chat.id, None)
     await bot.send_message(message.chat.id, "Данные очищены.")
 
-@bot.message_handler(func=lambda message: bot_username in message.text or (message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
+
+@bot.message_handler(func=lambda message: bot_username in message.text or (
+        message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
 async def handle_message(message):
     query = message.text.replace(f"@{bot_username}", "").strip()
-    
+
     if query:
         logger.info(f"Получен запрос: {query}")
         await bot.send_message(message.chat.id, "Обрабатываю ваш запрос...")
-        
+
         response = await get_gpt_response(query)
-        
-        await bot.reply_to(message, response)
+
+        # Отправляем сообщение с парсингом MarkdownV2
+        await bot.reply_to(message, response, parse_mode="MarkdownV2")
         logger.info("Ответ отправлен")
     else:
         await bot.reply_to(message, "Введите сообщение.")
+
 
 # Функция для запуска бота
 async def main():
@@ -62,6 +70,7 @@ async def main():
     except Exception as e:
         logger.error(f"Ошибка при работе бота: {str(e)}")
 
+
 # Запуск бота
 if __name__ == '__main__':
-    asyncio.run(main()
+    asyncio.run(main())
