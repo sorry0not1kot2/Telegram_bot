@@ -20,10 +20,11 @@ bot_info = asyncio.run(bot.get_me())
 bot_username = bot_info.username
 
 # Определение модели
+# ВАЖНО: Замените "YourProvider" на реального провайдера из g4f
 claude_3_sonnet = Model(
     name='claude-3-sonnet',
     base_provider='anthropic',
-    best_provider='You'  # Замените 'You' на подходящий провайдер
+    best_provider='YourProvider' 
 )
 
 # Обработчик сообщений
@@ -45,7 +46,7 @@ async def handle_message(message):
             await bot.reply_to(message, chat_gpt_response)
             logger.info("Ответ отправлен")
         except Exception as e:
-            logger.error(f"Ошибка при обработке запроса: {e}")
+            logger.exception(f"Ошибка при обработке запроса:")  # Подробный лог ошибки
             await bot.reply_to(message, "Извините, произошла ошибка.")
     else:
         await bot.reply_to(message, "Введите сообщение.")
@@ -54,9 +55,9 @@ async def handle_message(message):
 async def main():
     try:
         logger.info("Запуск бота...")
-        await bot.polling(none_stop=True)  # Поддерживать опрос постоянно
+        await bot.polling(none_stop=True)
     except Exception as e:
-        logger.error(f"Ошибка при работе бота: {str(e)}")
+        logger.exception(f"Ошибка при работе бота:")  # Подробный лог ошибки
 
 # Запуск бота
 if __name__ == '__main__':
