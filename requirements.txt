@@ -4,3 +4,4 @@ curl_cffi
 nest_asyncio
 pyTelegramBotAPI
 nodriver
+selenium==4.10.0
