@@ -4,24 +4,24 @@
 # файл mmain.py
 
 # Код с провайдерами и моделями бесплатно с g4f. 
-import logging
+# без библиотеки siogram Файл main.py:
 import os
-from aiogram import Bot, Dispatcher, types
-# Import ParseMode from the correct module or class
-from aiogram.types import ParseMode
-from aiogram.utils import executor
+import logging
+from telegram import Update, Bot
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 import g4f
 from g4f.Provider import Providers
 
 # Настройка бота
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-if not BOT_TOKEN:
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if not TELEGRAM_BOT_TOKEN:
     raise ValueError("Отсутствует переменная окружения TELEGRAM_BOT_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+bot = Bot(token=TELEGRAM_BOT_TOKEN)
+updater = Updater(bot=bot, use_context=True)
+dispatcher = updater.dispatcher
 
 user_contexts = {}
 
@@ -47,67 +47,66 @@ async def get_llm_response(prompt, context, provider_name, model_name):
     )
     return response['choices'][0]['message']['content']
 
-@dp.message_handler(commands=['start'])
-async def send_welcome(message: types.Message):
-    user_contexts[message.from_user.id] = {"context": "", "provider": "", "model": ""}
-    await message.reply("Привет! Я бот, использующий GPT-4. Сначала выберите провайдера, используя команду /setprovider.")
+def start(update: Update, context: CallbackContext):
+    user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
+    context.bot.send_message(chat_id=update.message.chat_id, text="Привет! Я бот, использующий GPT-4. Сначала выберите провайдера, используя команду /setprovider.")
 
-@dp.message_handler(commands=['setprovider'])
-async def set_provider(message: types.Message):
-    provider = message.text.split()[1] if len(message.text.split()) > 1 else None
+def set_provider(update: Update, context: CallbackContext):
+    provider = context.args[0] if context.args else None
     if provider and provider in available_providers:
-        user_contexts[message.from_user.id]["provider"] = provider
-        user_contexts[message.from_user.id]["model"] = ""  # Сбросить выбранную модель при смене провайдера
-        await message.reply(f"Провайдер установлен на {provider}. Теперь выберите модель, используя команду /setmodel.")
+        user_contexts[update.message.chat_id]["provider"] = provider
+        user_contexts[update.message.chat_id]["model"] = ""  # Сбросить выбранную модель при смене провайдера
+        context.bot.send_message(chat_id=update.message.chat_id, text=f"Провайдер установлен на {provider}. Теперь выберите модель, используя команду /setmodel.")
     else:
-        await message.reply(f"Пожалуйста, укажите одного из доступных провайдеров: {', '.join(available_providers)}")
+        context.bot.send_message(chat_id=update.message.chat_id, text=f"Пожалуйста, укажите одного из доступных провайдеров: {', '.join(available_providers)}")
 
-@dp.message_handler(commands=['setmodel'])
-async def set_model(message: types.Message):
-    user_id = message.from_user.id
-    provider = user_contexts[user_id]["provider"]
-    model = message.text.split()[1] if len(message.text.split()) > 1 else None
+def set_model(update: Update, context: CallbackContext):
+    provider = user_contexts[update.message.chat_id]["provider"]
+    model = context.args[0] if context.args else None
 
     if not provider:
-        await message.reply("Сначала выберите провайдера, используя команду /setprovider.")
+        context.bot.send_message(chat_id=update.message.chat_id, text="Сначала выберите провайдера, используя команду /setprovider.")
         return
 
     if model and model in provider_models.get(provider, []):
-        user_contexts[user_id]["model"] = model
-        await message.reply(f"Модель установлена на {model}.")
+        user_contexts[update.message.chat_id]["model"] = model
+        context.bot.send_message(chat_id=update.message.chat_id, text=f"Модель установлена на {model}.")
     else:
         available_models = provider_models.get(provider, [])
-        await message.reply(f"Пожалуйста, укажите одну из доступных моделей для провайдера {provider}: {', '.join(available_models)}")
+        context.bot.send_message(chat_id=update.message.chat_id, text=f"Пожалуйста, укажите одну из доступных моделей для провайдера {provider}: {', '.join(available_models)}")
 
-@dp.message_handler(commands=['reset'])
-async def reset_context(message: types.Message):
-    user_contexts[message.from_user.id] = {"context": "", "provider": "", "model": ""}
-    await message.reply("Контекст сброшен. Пожалуйста, выберите провайдера, используя команду /setprovider.")
+def reset_context(update: Update, context: CallbackContext):
+    user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
+    context.bot.send_message(chat_id=update.message.chat_id, text="Контекст сброшен. Пожалуйста, выберите провайдера, используя команду /setprovider.")
 
-@dp.message_handler()
-async def handle_message(message: types.Message):
-    user_id = message.from_user.id
+def handle_message(update: Update, context: CallbackContext):
+    user_id = update.message.chat_id
     user_data = user_contexts.get(user_id, {"context": "", "provider": "", "model": ""})
     context = user_data["context"]
     provider = user_data["provider"]
     model = user_data["model"]
 
     if not provider:
-        await message.reply("Сначала выберите провайдера, используя команду /setprovider.")
+        context.bot.send_message(chat_id=update.message.chat_id, text="Сначала выберите провайдера, используя команду /setprovider.")
         return
 
     if not model:
-        await message.reply("Сначала выберите модель, используя команду /setmodel.")
+        context.bot.send_message(chat_id=update.message.chat_id, text="Сначала выберите модель, используя команду /setmodel.")
         return
 
-    response = await get_llm_response(message.text, context, provider, model)
+    response = await get_llm_response(update.message.text, context, provider, model)
     
-    user_contexts[user_id]["context"] = context + "\nUser: " + message.text + "\nBot: " + response
-
-    await message.reply(response, parse_mode=ParseMode.MARKDOWN)
+    user_contexts[user_id]["context"] = context + "\nUser: " + update.message.text + "\nBot: " + response
+    context.bot.send_message(chat_id=update.message.chat_id, text=response)
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("setprovider", set_provider))
+    dispatcher.add_handler(CommandHandler("setmodel", set_model))
+    dispatcher.add_handler(CommandHandler("reset", reset_context))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
+    updater.start_polling()
+    updater.idle()
 # конец
 
