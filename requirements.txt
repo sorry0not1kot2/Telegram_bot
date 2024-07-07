@@ -1,8 +1,7 @@
+# файл requirements.txt
 python-telegram-bot==20.0
+aiogram==3.15.0
 g4f
 curl_cffi
 nest_asyncio
-pyTelegramBotAPI
 selenium==4.10.0
-aiogram
-
