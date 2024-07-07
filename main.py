@@ -26,7 +26,7 @@ application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
 user_contexts = {}
 
-available_providers = [provider.name for provider in Provider.Providers]
+available_providers = [provider.name for provider in Provider.ProviderType]
 provider_models = {
     "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
     "Forefront": ["claude-v1", "claude-v1.3"],
@@ -37,7 +37,7 @@ provider_models = {
 def get_llm_response(prompt, context, provider_name, model_name):
     full_prompt = context + "\n" + prompt if context else prompt
 
-    provider = next((p for p in Provider.Providers if p.name == provider_name), None)
+    provider = next((p for p in Provider.ProviderType if p.name == provider_name), None)
     if provider is None:
         raise ValueError(f"Provider {provider_name} not found")
 
