@@ -7,8 +7,8 @@
 import asyncio
 import logging
 import os
-import g4f
 from telebot.async_telebot import AsyncTeleBot
+import g4f
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -18,13 +18,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
-# Получение имени пользователя бота
-bot_info = asyncio.run(bot.get_me())
-bot_username = bot_info.username
-
-# Хранение данных по разговорам
-conversation_data = {}
-
+# Функция для получения ответа от GPT-4
 async def get_gpt_response(query):
     try:
         response = await g4f.ChatCompletion.create_async(
@@ -36,37 +30,26 @@ async def get_gpt_response(query):
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
 
-@bot.message_handler(commands=['start'])
-async def handle_start_command(message):
-    await bot.send_message(message.chat.id, f"Привет! Я - GPT-бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
+# Функция обработки команды /start
+async def start(message):
+    await bot.send_message(chat_id=message.chat.id, text="Привет! Я бот на основе GPT-4. Спроси меня о чем угодно.")
 
-@bot.message_handler(commands=['clear'])
-async def handle_clear_command(message):
-    conversation_data.pop(message.chat.id, None)
-    await bot.send_message(message.chat.id, "Данные очищены.")
-
-@bot.message_handler(func=lambda message: bot_username in message.text or (message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
-async def handle_message(message):
-    query = message.text.replace(f"@{bot_username}", "").strip()
+# Функция обработки сообщений 
+async def message_handler(message):
+    text = message.text
+    response = await get_gpt_response(text)
     
-    if query:
-        logger.info(f"Получен запрос: {query}")
-        await bot.send_message(message.chat.id, "думаю...")
-        
-        response = await get_gpt_response(query)
-        
-        await bot.reply_to(message, response)
-        logger.info("Бот: Ответ отправлен. {query}")
+    # Проверка структуры ответа
+    if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
+        response_text = response['choices'][0]['message']['content']
     else:
-        await bot.reply_to(message, "Введите сообщение.")
+        response_text = response
+    
+    await bot.send_message(chat_id=message.chat.id, text=response_text)
 
-# Функция для запуска бота
-async def main():
-    try:
-        logger.info("Запуск бота...")
-        await bot.polling(none_stop=True, timeout=60)
-    except Exception as e:
-        logger.error(f"Ошибка при работе бота: {str(e)}")
+# Добавление обработчиков команд и сообщений
+bot.register_message_handler(start, commands=['start'])
+bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
 if __name__ == '__main__':
