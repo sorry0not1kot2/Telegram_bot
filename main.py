@@ -78,4 +78,3 @@ asyncio.run(bot.polling())
 
 # конец
 
-"""
