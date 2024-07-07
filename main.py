@@ -59,6 +59,9 @@ async def start(message):
 # Функция обработки сообщений 
 async def message_handler(message):
     text = message.text
+    logger.info(f"Получено сообщение от пользователя: {text}")
+    print(f"::notice::Получено сообщение от пользователя: {text}")
+
     response = await get_gpt_response(text)
     
     # Проверка структуры ответа
@@ -66,7 +69,10 @@ async def message_handler(message):
         response_text = response['choices'][0]['message']['content']
     else:
         response_text = response
-    
+
+    logger.info(f"Ответ GPT: {response_text}")
+    print(f"::notice::Ответ GPT: {response_text}")
+
     await bot.send_message(chat_id=message.chat.id, text=response_text, parse_mode='Markdown')
 
 # Добавление обработчиков команд и сообщений
