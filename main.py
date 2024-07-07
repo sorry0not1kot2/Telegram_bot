@@ -73,7 +73,12 @@ async def message_handler(message):
     logger.info(f"Ответ GPT: {response_text}")
     print(f"::notice::Ответ GPT: {response_text}")
 
+    # Сохранение сообщений в файл
+    with open("messages.log", "a") as log_file:
+        log_file.write(f"User: {text}\nGPT: {response_text}\n")
+
     await bot.send_message(chat_id=message.chat.id, text=response_text, parse_mode='Markdown')
+
 
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
