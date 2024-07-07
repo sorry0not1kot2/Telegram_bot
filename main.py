@@ -5,6 +5,7 @@
 
 # Код с провайдерами и моделями бесплатно с g4f. 
 # без библиотеки siogram Файл main.py:
+# Исправленная версия, работает с асинхронными функциями и телебот без аиограм
 import os
 import logging
 from telegram import Update, Bot
@@ -33,14 +34,14 @@ provider_models = {
     # Добавьте другие провайдеры и модели здесь
 }
 
-async def get_llm_response(prompt, context, provider_name, model_name):
+def get_llm_response(prompt, context, provider_name, model_name):
     full_prompt = context + "\n" + prompt if context else prompt
 
     provider = next((p for p in Providers if p.name == provider_name), None)
     if provider is None:
         raise ValueError(f"Provider {provider_name} not found")
 
-    response = await g4f.ChatCompletion.create(
+    response = g4f.ChatCompletion.create(
         provider=provider,
         model=model_name,
         messages=[{"role": "user", "content": full_prompt}]
@@ -94,7 +95,7 @@ def handle_message(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.message.chat_id, text="Сначала выберите модель, используя команду /setmodel.")
         return
 
-    response = await get_llm_response(update.message.text, context, provider, model)
+    response = get_llm_response(update.message.text, context, provider, model)
     
     user_contexts[user_id]["context"] = context + "\nUser: " + update.message.text + "\nBot: " + response
     context.bot.send_message(chat_id=update.message.chat_id, text=response)
