@@ -4,64 +4,110 @@
 # файл mmain.py
 
 
-# работающая версия с парсингом маркдаун
-# без условий чата и без отсылки ботом сообщения я подумаю
-# работает от провайдера You с gpt-4o  х.з. как
-import asyncio
+# Код с провайдерами и моделями бесплатно с g4f. 
 import logging
 import os
-from telebot.async_telebot import AsyncTeleBot
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import ParseMode
+from aiogram.utils import executor
 import g4f
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from g4f.Provider import Providers
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = AsyncTeleBot(BOT_TOKEN)
+if not BOT_TOKEN:
+    raise ValueError("Отсутствует переменная окружения TELEGRAM_BOT_TOKEN")
 
-# Функция для получения ответа от GPT-4
-async def get_gpt_response(query):
-    try:
-        response = await g4f.ChatCompletion.create_async(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": query}],
-        )
-        return response
-    except Exception as e:
-        logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
-        return f"Ошибка при получении ответа от GPT: {str(e)}"
+logging.basicConfig(level=logging.INFO)
 
-# Функция обработки команды /start
-async def start(message):
-    await bot.send_message(chat_id=message.chat.id, text="Привет! Я бот на основе GPT-4. Спроси меня о чем угодно.")
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(bot)
 
-# Функция обработки сообщений 
-async def message_handler(message):
-    text = message.text
-    response = await get_gpt_response(text)
-    
-    # Проверка структуры ответа
-    if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
-        response_text = response['choices'][0]['message']['content']
+user_contexts = {}
+
+available_providers = [provider.name for provider in Providers]
+provider_models = {
+    "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
+    "Forefront": ["claude-v1", "claude-v1.3"],
+    "DeepAI": ["deepai-gpt", "deepai-gpt-4"],
+    # Добавьте другие провайдеры и модели здесь
+}
+
+async def get_llm_response(prompt, context, provider_name, model_name):
+    full_prompt = context + "\n" + prompt if context else prompt
+
+    provider = next((p for p in Providers if p.name == provider_name), None)
+    if provider is None:
+        raise ValueError(f"Provider {provider_name} not found")
+
+    response = await g4f.ChatCompletion.create(
+        provider=provider,
+        model=model_name,
+        messages=[{"role": "user", "content": full_prompt}]
+    )
+    return response['choices'][0]['message']['content']
+
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    user_contexts[message.from_user.id] = {"context": "", "provider": "", "model": ""}
+    await message.reply("Привет! Я бот, использующий GPT-4. Сначала выберите провайдера, используя команду /setprovider.")
+
+@dp.message_handler(commands=['setprovider'])
+async def set_provider(message: types.Message):
+    provider = message.text.split()[1] if len(message.text.split()) > 1 else None
+    if provider and provider in available_providers:
+        user_contexts[message.from_user.id]["provider"] = provider
+        user_contexts[message.from_user.id]["model"] = ""  # Сбросить выбранную модель при смене провайдера
+        await message.reply(f"Провайдер установлен на {provider}. Теперь выберите модель, используя команду /setmodel.")
     else:
-        response_text = response
+        await message.reply(f"Пожалуйста, укажите одного из доступных провайдеров: {', '.join(available_providers)}")
+
+@dp.message_handler(commands=['setmodel'])
+async def set_model(message: types.Message):
+    user_id = message.from_user.id
+    provider = user_contexts[user_id]["provider"]
+    model = message.text.split()[1] if len(message.text.split()) > 1 else None
+
+    if not provider:
+        await message.reply("Сначала выберите провайдера, используя команду /setprovider.")
+        return
+
+    if model and model in provider_models.get(provider, []):
+        user_contexts[user_id]["model"] = model
+        await message.reply(f"Модель установлена на {model}.")
+    else:
+        available_models = provider_models.get(provider, [])
+        await message.reply(f"Пожалуйста, укажите одну из доступных моделей для провайдера {provider}: {', '.join(available_models)}")
+
+@dp.message_handler(commands=['reset'])
+async def reset_context(message: types.Message):
+    user_contexts[message.from_user.id] = {"context": "", "provider": "", "model": ""}
+    await message.reply("Контекст сброшен. Пожалуйста, выберите провайдера, используя команду /setprovider.")
+
+@dp.message_handler()
+async def handle_message(message: types.Message):
+    user_id = message.from_user.id
+    user_data = user_contexts.get(user_id, {"context": "", "provider": "", "model": ""})
+    context = user_data["context"]
+    provider = user_data["provider"]
+    model = user_data["model"]
+
+    if not provider:
+        await message.reply("Сначала выберите провайдера, используя команду /setprovider.")
+        return
+
+    if not model:
+        await message.reply("Сначала выберите модель, используя команду /setmodel.")
+        return
+
+    response = await get_llm_response(message.text, context, provider, model)
     
-    await bot.send_message(chat_id=message.chat.id, text=response_text, parse_mode='Markdown')
+    user_contexts[user_id]["context"] = context + "\nUser: " + message.text + "\nBot: " + response
 
-# Добавление обработчиков команд и сообщений
-bot.register_message_handler(start, commands=['start'])
-bot.register_message_handler(message_handler, content_types=['text'])
+    await message.reply(response, parse_mode=ParseMode.MARKDOWN)
 
-# Асинхронная функция main для запуска бота
-async def main():
-    await bot.polling()
-
-# Запуск бота
 if __name__ == '__main__':
-    asyncio.run(main())
-
+    executor.start_polling(dp, skip_updates=True)
 
 # конец
 
