@@ -22,7 +22,7 @@ if not TELEGRAM_BOT_TOKEN:
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
-updater = Updater(bot=bot, use_context=True)
+updater = Updater(bot=bot)
 dispatcher = updater.dispatcher
 
 user_contexts = {}
@@ -110,7 +110,6 @@ if __name__ == '__main__':
 
     updater.start_polling()
     updater.idle()
-
     
 # конец
 
