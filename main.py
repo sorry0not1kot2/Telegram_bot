@@ -25,7 +25,7 @@ async def get_gpt_response(query):
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-        return response
+        return response['choices'][0]['message']['content']
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
@@ -38,22 +38,20 @@ async def start(message):
 async def message_handler(message):
     text = message.text
     response = await get_gpt_response(text)
-    
-    # Проверка структуры ответа
-    if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
-        response_text = response['choices'][0]['message']['content']
-    else:
-        response_text = response
-    
-    await bot.send_message(chat_id=message.chat.id, text=response_text)
+    await bot.send_message(chat_id=message.chat.id, text=response)
 
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
 bot.register_message_handler(message_handler, content_types=['text'])
 
+# Асинхронная функция main для запуска бота
+async def main():
+    await bot.polling()
+
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 # конец
 
