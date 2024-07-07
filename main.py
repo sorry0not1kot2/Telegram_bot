@@ -50,6 +50,7 @@ async def get_gpt_response(query):
 # Функция для асинхронного вывода сообщения GPT в лог
 async def log_gpt_message(response_text):
     logger.info(f"Сообщение GPT: {response_text}")
+    print(f"::notice::Сообщение GPT: {response_text}")
 
 # Функция обработки команды /start
 async def start(message):
