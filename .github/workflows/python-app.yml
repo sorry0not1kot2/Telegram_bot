@@ -35,19 +35,19 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     
       - name: Run main.py 
-        id: run-bot # Добавляем ID для доступа к output
+        id: run-bot 
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: python main.py
 
       - name: Print GPT Response 
         run: |
-          echo "Структура ответа GPT: ${{ steps.run-bot.outputs.gpt_response }}" 
-        #  Теперь можно обрабатывать данные из 'gpt_response'
+          echo "Структура ответа GPT:"
+          echo "${{ steps.run-bot.outputs.gpt_response }}" 
 
       - name: Upload response artifact
         if: failure()
         uses: actions/upload-artifact@v2
         with:
          name: gpt-response
-         path: response.json
+         path: response.json 
