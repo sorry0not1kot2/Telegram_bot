@@ -50,4 +50,10 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
          name: gpt-response
-         path: response.json 
+         path: response.json  
+
+      - name: Upload messages log
+        uses: actions/upload-artifact@v2
+        with:
+          name: messages-log
+          path: messages.log
