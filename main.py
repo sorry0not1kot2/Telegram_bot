@@ -29,14 +29,19 @@ async def get_gpt_response(query):
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-        
-        # Вывод структуры ответа в GitHub Actions
-        github_output("gpt_response", response)
+
+        # Преобразуем ответ в строку для вывода
+        response_str = str(response)
+
+        # Выводим структуру ответа в GitHub Actions
+        github_output("gpt_response", response_str)
         
         return response
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
+
+# ... (остальной код main.py остается без изменений)
 
 # Функция обработки команды /start
 async def start(message):
