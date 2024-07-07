@@ -4,5 +4,6 @@ curl_cffi
 nest_asyncio
 pyTelegramBotAPI
 selenium==4.10.0
-browser-cookie3
+json
+
 
