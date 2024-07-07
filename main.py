@@ -5,12 +5,20 @@
 
 
 import asyncio
+imporimport asyncio
 import logging
 import os
-import time
-from telebot.async_telebot import AsyncTeleBot
 import g4f
-import json
+from telegram import Bot, Update
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    MessageHandler,
+    CommandHandler,
+    filters,
+)
+from telegram.constants import ParseMode
+import nest_asyncio
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -18,11 +26,7 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = AsyncTeleBot(BOT_TOKEN)
-
-# Функция для вывода информации в GitHub Actions
-def github_output(key, value):
-    print(f'::set-output name={key}::{value}')
+bot = Bot(token=BOT_TOKEN)
 
 # Функция для получения ответа от GPT-4
 async def get_gpt_response(query):
@@ -31,37 +35,32 @@ async def get_gpt_response(query):
             model="gpt-4o",
             messages=[{"role": "user", "content": query}],
         )
-
-        # Преобразуем ответ в форматированный JSON
-        response_json = json.dumps(response, indent=4)
-
-        # Выводим структуру ответа в GitHub Actions
-        github_output("gpt_response", response_json)
-
-        # Выводим сообщение GPT в лог (асинхронно)
-        if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
-            response_text = response['choices'][0]['message']['content']
-            asyncio.create_task(log_gpt_message(response_text))
-
         return response
     except Exception as e:
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
 
-# Функция для асинхронного вывода сообщения GPT в лог
-async def log_gpt_message(response_text):
-    logger.info(f"Сообщение GPT: {response_text}")
-    print(f"::notice::Сообщение GPT: {response_text}")
-
 # Функция обработки команды /start
-async def start(message):
-    await bot.send_message(chat_id=message.chat.id, text="Привет! Я бот на основе GPT-4. Спроси меня о чем угодно.")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Привет! Я бот на основе GPT-4. Спроси меня о чем угодно.")
 
-# Функция обработки сообщений 
-async def message_handler(message):
-    text = message.text
-    logger.info(f"Получено сообщение от пользователя: {text}")
-    print(f"::notice::Получено сообщение от пользователя: {text}")
+# Функция обработки команды /clear
+async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    if user_id in context.bot_data:
+        context.bot_data[user_id]["history"] = []
+        await update.message.reply_text("История очищена.")
+
+# Функция обработки сообщений
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    text = update.message.text
+
+    # Инициализируем историю для пользователя
+    if user_id not in context.bot_data:
+        context.bot_data[user_id] = {"history": []}
+
+    history = context.bot_data[user_id]["history"]
 
     response = await get_gpt_response(text)
     
@@ -71,24 +70,30 @@ async def message_handler(message):
     else:
         response_text = response
 
-    logger.info(f"Ответ GPT: {response_text}")
-    print(f"::notice::Ответ GPT: {response_text}")
+    history.append({"user": text, "bot": response_text})
 
-    # Сохранение сообщений в файл
-    with open("messages.log", "a") as log_file:
-        log_file.write(f"User: {text}\nGPT: {response_text}\n")
+    await update.message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN)
 
-    await bot.send_message(chat_id=message.chat.id, text=response_text, parse_mode='Markdown')
+# Функция обработки ошибок
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
-    # Добавление задержки перед завершением работы
-    time.sleep(5)
+async def main():
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
 
-# Добавление обработчиков команд и сообщений
-bot.register_message_handler(start, commands=['start'])
-bot.register_message_handler(message_handler, content_types=['text'])
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("clear", clear))
+    application.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
+    )
+    application.add_error_handler(error_handler)
 
-# Запуск бота
-asyncio.run(bot.polling())
+    logger.info("Запуск бота...")
+    await application.run_polling(drop_pending_updates=True)
+
+if __name__ == "__main__":
+    nest_asyncio.apply()
+    asyncio.run(main())
 
 # конец
 
