@@ -12,7 +12,7 @@ import logging
 from telegram import Update, Bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 import g4f
-from g4f.Provider import Providers
+from g4f import Provider
 
 # Настройка бота
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -27,7 +27,7 @@ dispatcher = updater.dispatcher
 
 user_contexts = {}
 
-available_providers = [provider.name for provider in Providers]
+available_providers = [provider.name for provider in Provider.Providers]
 provider_models = {
     "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
     "Forefront": ["claude-v1", "claude-v1.3"],
@@ -38,7 +38,7 @@ provider_models = {
 def get_llm_response(prompt, context, provider_name, model_name):
     full_prompt = context + "\n" + prompt if context else prompt
 
-    provider = next((p for p in Providers if p.name == provider_name), None)
+    provider = next((p for p in Provider.Providers if p.name == provider_name), None)
     if provider is None:
         raise ValueError(f"Provider {provider_name} not found")
 
@@ -110,6 +110,7 @@ if __name__ == '__main__':
 
     updater.start_polling()
     updater.idle()
+
     
 # конец
 
