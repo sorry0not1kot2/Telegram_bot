@@ -7,6 +7,7 @@
 import asyncio
 import logging
 import os
+import time
 from telebot.async_telebot import AsyncTeleBot
 import g4f
 import json
@@ -79,13 +80,15 @@ async def message_handler(message):
 
     await bot.send_message(chat_id=message.chat.id, text=response_text, parse_mode='Markdown')
 
+    # Добавление задержки перед завершением работы
+    time.sleep(5)
+
 # Добавление обработчиков команд и сообщений
 bot.register_message_handler(start, commands=['start'])
 bot.register_message_handler(message_handler, content_types=['text'])
 
 # Запуск бота
 asyncio.run(bot.polling())
-
 
 # конец
 
