@@ -10,7 +10,7 @@
 import os
 import logging
 from telegram import Update, Bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ApplicationBuilder
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
 import g4f
 from g4f import Provider
 
@@ -108,7 +108,6 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     application.run_polling()
-
     
 # конец
 
