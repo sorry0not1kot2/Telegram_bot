@@ -10,7 +10,7 @@
 import os
 import logging
 from telegram import Update, Bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 import g4f
 from g4f.Provider import Providers
 
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     dispatcher.add_handler(CommandHandler("setprovider", set_provider))
     dispatcher.add_handler(CommandHandler("setmodel", set_model))
     dispatcher.add_handler(CommandHandler("reset", reset_context))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     updater.start_polling()
     updater.idle()
