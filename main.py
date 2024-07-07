@@ -3,7 +3,6 @@
 #
 # файл mmain.py
 
-
 # Код с провайдерами и моделями бесплатно с g4f. 
 import logging
 import os
