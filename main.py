@@ -8,16 +8,7 @@ import asyncio
 import logging
 import os
 import g4f
-from telegram import Bot, Update
-from telegram.ext import (
-    ApplicationBuilder,
-    ContextTypes,
-    MessageHandler,
-    CommandHandler,
-    filters,
-)
-from telegram.constants import ParseMode
-import nest_asyncio
+from telebot.async_telebot import AsyncTeleBot
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -25,9 +16,15 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = Bot(token=BOT_TOKEN)
+bot = AsyncTeleBot(BOT_TOKEN)
 
-# Функция для получения ответа от GPT-4
+# Получение имени пользователя бота
+bot_info = asyncio.run(bot.get_me())
+bot_username = bot_info.username
+
+# Хранение данных по разговорам
+conversation_data = {}
+
 async def get_gpt_response(query):
     try:
         response = await g4f.ChatCompletion.create_async(
@@ -39,59 +36,40 @@ async def get_gpt_response(query):
         logger.error(f"Ошибка при получении ответа от GPT: {str(e)}")
         return f"Ошибка при получении ответа от GPT: {str(e)}"
 
-# Функция обработки команды /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Я бот на основе GPT-4. Спроси меня о чем угодно.")
+@bot.message_handler(commands=['start'])
+async def handle_start_command(message):
+    await bot.send_message(message.chat.id, f"Привет! Я - GPT-бот. Обращайтесь по @{bot_username} или отвечайте на мои сообщения, чтобы получить ответ.")
 
-# Функция обработки команды /clear
-async def clear(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    if user_id in context.bot_data:
-        context.bot_data[user_id]["history"] = []
-        await update.message.reply_text("История очищена.")
+@bot.message_handler(commands=['clear'])
+async def handle_clear_command(message):
+    conversation_data.pop(message.chat.id, None)
+    await bot.send_message(message.chat.id, "Данные очищены.")
 
-# Функция обработки сообщений
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
-    text = update.message.text
-
-    # Инициализируем историю для пользователя
-    if user_id not in context.bot_data:
-        context.bot_data[user_id] = {"history": []}
-
-    history = context.bot_data[user_id]["history"]
-
-    response = await get_gpt_response(text)
+@bot.message_handler(func=lambda message: bot_username in message.text or (message.reply_to_message and message.reply_to_message.from_user.username == bot_username))
+async def handle_message(message):
+    query = message.text.replace(f"@{bot_username}", "").strip()
     
-    # Проверка структуры ответа
-    if isinstance(response, dict) and 'choices' in response and len(response['choices']) > 0:
-        response_text = response['choices'][0]['message']['content']
+    if query:
+        logger.info(f"Получен запрос: {query}")
+        await bot.send_message(message.chat.id, "думаю...")
+        
+        response = await get_gpt_response(query)
+        
+        await bot.reply_to(message, response)
+        logger.info("Бот: Ответ отправлен. {query}")
     else:
-        response_text = response
+        await bot.reply_to(message, "Введите сообщение.")
 
-    history.append({"user": text, "bot": response_text})
-
-    await update.message.reply_text(response_text, parse_mode=ParseMode.MARKDOWN)
-
-# Функция обработки ошибок
-async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.error(msg="Exception while handling an update:", exc_info=context.error)
-
+# Функция для запуска бота
 async def main():
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    try:
+        logger.info("Запуск бота...")
+        await bot.polling(none_stop=True, timeout=60)
+    except Exception as e:
+        logger.error(f"Ошибка при работе бота: {str(e)}")
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("clear", clear))
-    application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)
-    )
-    application.add_error_handler(error_handler)
-
-    logger.info("Запуск бота...")
-    await application.run_polling(drop_pending_updates=True)
-
-if __name__ == "__main__":
-    nest_asyncio.apply()
+# Запуск бота
+if __name__ == '__main__':
     asyncio.run(main())
 
 # конец
