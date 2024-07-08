@@ -9,7 +9,7 @@
 
 import os
 from g4f import Provider
-from g4f.Provider import bing
+from g4f.Provider import Bing
 from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
@@ -19,17 +19,17 @@ bot = Bot(BOT_TOKEN)
 
 async def handle_text_request(query):
     # Используем метод для обработки текстовых запросов
-    response = bing.ChatCompletion.create(prompt=query)
+    response = Bing.ChatCompletion.create(prompt=query)
     return response['choices'][0]['text']
 
 async def generate_image(prompt):
     # Используем метод для генерации изображений
-    image_url = bing.ImageGeneration.create(prompt=prompt)
+    image_url = Bing.ImageGeneration.create(prompt=prompt)
     return image_url['data'][0]['url']
 
 async def analyze_photo(photo_path, description):
     # Используем метод для анализа изображений
-    analysis = bing.ImageAnalysis.create(image_path=photo_path, description=description)
+    analysis = Bing.ImageAnalysis.create(image_path=photo_path, description=description)
     return analysis['result']
 
 async def start(update: Update, context: CallbackContext) -> None:
