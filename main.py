@@ -19,17 +19,17 @@ bot = Bot(BOT_TOKEN)
 
 async def handle_text_request(query):
     # Используем метод для обработки текстовых запросов
-    response = Bing.create_completion(prompt=query)
-    return response['choices'][0]['text']
+    response = await Bing.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
+    return response['choices'][0]['message']['content']
 
 async def generate_image(prompt):
     # Используем метод для генерации изображений
-    image_url = Bing.create_image(prompt=prompt)
+    image_url = await Bing.create_image(prompt=prompt)
     return image_url['data'][0]['url']
 
 async def analyze_photo(photo_path, description):
     # Используем метод для анализа изображений
-    analysis = Bing.analyze_image(image_path=photo_path, description=description)
+    analysis = await Bing.analyze_image(image_path=photo_path, description=description)
     return analysis['result']
 
 async def start(update: Update, context: CallbackContext) -> None:
