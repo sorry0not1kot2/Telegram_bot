@@ -25,7 +25,9 @@ async def handle_text_request(query):
     logger.info(f"Handling text request: {query}")
     try:
         response = You.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
-        result = response['choices'][0]['message']['content']
+        result = ""
+        for message in response:
+            result += message['choices'][0]['message']['content']
         logger.info(f"Text request result: {result}")
         return result
     except Exception as e:
@@ -36,7 +38,9 @@ async def generate_image(prompt):
     logger.info(f"Generating image for prompt: {prompt}")
     try:
         response = You.create_image(prompt=prompt)
-        result = response['data'][0]['url']
+        result = ""
+        for image in response:
+            result += image['data'][0]['url']
         logger.info(f"Generated image URL: {result}")
         return result
     except Exception as e:
@@ -47,7 +51,9 @@ async def analyze_photo(photo_path, description):
     logger.info(f"Analyzing photo: {photo_path} with description: {description}")
     try:
         response = You.analyze_image(image_path=photo_path, description=description)
-        result = response['result']
+        result = ""
+        for analysis in response:
+            result += analysis['result']
         logger.info(f"Photo analysis result: {result}")
         return result
     except Exception as e:
@@ -96,6 +102,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
     
 
 """
