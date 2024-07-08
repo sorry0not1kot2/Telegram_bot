@@ -26,8 +26,10 @@ application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
 user_contexts = {}
 
-# Фильтрация провайдеров, чтобы включить только те, которые могут быть использованы для генерации текста
-available_providers = [provider for provider in dir(providers) if isinstance(getattr(providers, provider), type)]
+# Список провайдеров из репозитория gpt4free
+available_providers = [
+    "You", "Forefront", "DeepAI", "ChatGPT", "OpenAI", "Anthropic", "Cohere", "AI21", "AlephAlpha"
+]
 provider_models = {
     "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
     "Forefront": ["claude-v1", "claude-v1.3"],
@@ -91,37 +93,6 @@ async def set_provider(update: Update, context: CallbackContext):
     await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
 
 async def reset_context(update: Update, context: CallbackContext):
-    user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
-    await update.message.reply_text("Контекст сброшен. Пожалуйста, выберите модель, используя команду /setmodel.")
-
-async def handle_message(update: Update, context: CallbackContext):
-    user_id = update.message.chat_id
-    user_data = user_contexts.get(user_id, {"context": "", "provider": "", "model": ""})
-    user_context = user_data["context"]
-    provider = user_data["provider"]
-    model = user_data["model"]
-
-    if not model:
-        await update.message.reply_text("Сначала выберите модель, используя команду /setmodel.")
-        return
-
-    if not provider:
-        await update.message.reply_text("Сначала выберите провайдера, используя команду /setprovider.")
-        return
-
-    response = get_llm_response(update.message.text, user_context, provider, model)
-    
-    user_contexts[user_id]["context"] = user_context + "\nUser: " + update.message.text + "\nBot: " + response
-    await update.message.reply_text(response)
-
-if __name__ == '__main__':
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("setmodel", set_model))
-    application.add_handler(CommandHandler("setprovider", set_provider))
-    application.add_handler(CommandHandler("reset", reset_context))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    application.run_polling()
     
 # конец
 
