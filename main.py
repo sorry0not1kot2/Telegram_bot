@@ -42,7 +42,7 @@ def get_llm_response(prompt, context, provider_name, model_name):
 
     provider = getattr(providers, provider_name, None)
     if provider is None:
-        raise ValueError(f"Provider {provider_name} not found")
+        raise ValueError(f"Provider {provider_name} not found. Available providers are: {dir(providers)}")
 
     response = g4f.ChatCompletion.create(
         provider=provider,
