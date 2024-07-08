@@ -3,10 +3,103 @@
 #
 # файл mmain.py
 
-# Код с провайдерами и моделями бесплатно с g4f. 
-# без библиотеки siogram Файл main.py:
-# Исправленная версия, работает с асинхронными функциями и телебот без аиограм
+import os
+import logging
+from g4f import Provider
+from g4f.Provider import OpenAI
+from telegram import Bot, Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Загрузка переменных окружения из файла секрета репозитория
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+bot = Bot(BOT_TOKEN)
+
+async def handle_text_request(query):
+    logger.info(f"Handling text request: {query}")
+    try:
+        response = OpenAI.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
+        result = response['choices'][0]['message']['content']
+        logger.info(f"Text request result: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Error handling text request: {e}")
+        return f"Произошла ошибка: {e}"
+
+async def generate_image(prompt):
+    logger.info(f"Generating image for prompt: {prompt}")
+    try:
+        response = OpenAI.create_image(prompt=prompt)
+        result = response['data'][0]['url']
+        logger.info(f"Generated image URL: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Error generating image: {e}")
+        return f"Произошла ошибка: {e}"
+
+async def analyze_photo(photo_path, description):
+    logger.info(f"Analyzing photo: {photo_path} with description: {description}")
+    try:
+        response = OpenAI.analyze_image(image_path=photo_path, description=description)
+        result = response['result']
+        logger.info(f"Photo analysis result: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Error analyzing photo: {e}")
+        return f"Произошла ошибка: {e}"
+
+async def start(update: Update, context: CallbackContext) -> None:
+    logger.info("Received /start command")
+    await update.message.reply_text('Привет! Я бот, который может отвечать на текстовые запросы, генерировать изображения и анализировать фото. Отправьте текст или изображение с описанием.')
+
+async def handle_message(update: Update, context: CallbackContext) -> None:
+    query = update.message.text
+    logger.info(f"Received message: {query}")
+    
+    if update.message.photo:
+        logger.info("Message contains a photo")
+        photo_file = await update.message.photo[-1].get_file()
+        photo_path = await photo_file.download()
+        description = query if query else "анализировать"
+        analysis = await analyze_photo(photo_path, description)
+        await update.message.reply_text(analysis)
+    elif "нарисуй" in query.lower():
+        image_url = await generate_image(query)
+        await update.message.reply_text(f'Вот ваше изображение: {image_url}')
+    else:
+        response = await handle_text_request(query)
+        await update.message.reply_text(response)
+
+async def handle_photo(update: Update, context: CallbackContext) -> None:
+    logger.info("Received photo")
+    photo_file = await update.message.photo[-1].get_file()
+    photo_path = await photo_file.download()
+    description = update.message.caption if update.message.caption else "анализировать"
+    analysis = await analyze_photo(photo_path, description)
+    await update.message.reply_text(analysis)
+
+def main():
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+
+    logger.info("Starting bot")
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
+
+
+"""
+# Bing но требует капчу или прокси
 import os
 import logging
 from g4f import Provider
@@ -103,7 +196,7 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
+"""
 """
 # Список провайдеров и моделей
 provider_models = {
