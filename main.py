@@ -37,7 +37,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
     query = update.message.text
-    if "нарисуй" в query.lower():
+    if "нарисуй" in query.lower():
         image_url = await generate_image(query)
         await update.message.reply_text(f'Вот ваше изображение: {image_url}')
     else:
