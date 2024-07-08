@@ -6,7 +6,7 @@
 import os
 import logging
 from g4f import Provider
-from g4f.Provider import OpenAI
+from g4f.Provider import You
 from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
@@ -24,7 +24,7 @@ bot = Bot(BOT_TOKEN)
 async def handle_text_request(query):
     logger.info(f"Handling text request: {query}")
     try:
-        response = OpenAI.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
+        response = You.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
         result = response['choices'][0]['message']['content']
         logger.info(f"Text request result: {result}")
         return result
@@ -35,7 +35,7 @@ async def handle_text_request(query):
 async def generate_image(prompt):
     logger.info(f"Generating image for prompt: {prompt}")
     try:
-        response = OpenAI.create_image(prompt=prompt)
+        response = You.create_image(prompt=prompt)
         result = response['data'][0]['url']
         logger.info(f"Generated image URL: {result}")
         return result
@@ -46,7 +46,7 @@ async def generate_image(prompt):
 async def analyze_photo(photo_path, description):
     logger.info(f"Analyzing photo: {photo_path} with description: {description}")
     try:
-        response = OpenAI.analyze_image(image_path=photo_path, description=description)
+        response = You.analyze_image(image_path=photo_path, description=description)
         result = response['result']
         logger.info(f"Photo analysis result: {result}")
         return result
@@ -96,7 +96,7 @@ def main():
 
 if __name__ == '__main__':
     main()
-
+    
 
 """
 # Bing но требует капчу или прокси
