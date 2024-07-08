@@ -50,6 +50,111 @@ def get_llm_response(prompt, context, provider_name, model_name):
 
 async def start(update: Update, context: CallbackContext):
     user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
+    await update.message.reply_text("Привет! Я бот, использующий GPT-4. Сначала выберите провайдера, используя команду /setprovider.")
+
+async def set_provider(update: Update, context: CallbackContext):
+    provider = context.args[0] if context.args else None
+    if provider and provider in available_providers:
+        user_contexts[update.message.chat_id]["provider"] = provider
+        user_contexts[update.message.chat_id]["model"] = ""  # Сбросить выбранную модель при смене провайдера
+        await update.message.reply_text(f"Провайдер установлен на {provider}. Теперь выберите модель, используя команду /setmodel.")
+    else:
+        await update.message.reply_text(f"Пожалуйста, укажите одного из доступных провайдеров: {', '.join(available_providers)}")
+
+async def set_model(update: Update, context: CallbackContext):
+    provider = user_contexts[update.message.chat_id]["provider"]
+    model = context.args[0] if context.args else None
+
+    if not provider:
+        await update.message.reply_text("Сначала выберите провайдера, используя команду /setprovider.")
+        return
+
+    if model and model in provider_models.get(provider, []):
+        user_contexts[update.message.chat_id]["model"] = model
+        await update.message.reply_text(f"Модель установлена на {model}.")
+    else:
+        available_models = provider_models.get(provider, [])
+        await update.message.reply_text(f"Пожалуйста, укажите одну из доступных моделей для провайдера {provider}: {', '.join(available_models)}")
+
+async def reset_context(update: Update, context: CallbackContext):
+    user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
+    await update.message.reply_text("Контекст сброшен. Пожалуйста, выберите провайдера, используя команду /setprovider.")
+
+async def handle_message(update: Update, context: CallbackContext):
+    user_id = update.message.chat_id
+    user_data = user_contexts.get(user_id, {"context": "", "provider": "", "model": ""})
+    user_context = user_data["context"]
+    provider = user_data["provider"]
+    model = user_data["model"]
+
+    if not provider:
+        await update.message.reply_text("Сначала выберите провайдера, используя команду /setprovider.")
+        return
+
+    if not model:
+        await update.message.reply_text("Сначала выберите модель, используя команду /setmodel.")
+        return
+
+    response = get_llm_response(update.message.text, user_context, provider, model)
+    
+    user_contexts[user_id]["context"] = user_context + "\nUser: " + update.message.text + "\nBot: " + response
+    await update.message.reply_text(response)
+
+if __name__ == '__main__':
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("setprovider", set_provider))
+    application.add_handler(CommandHandler("setmodel", set_model))
+    application.add_handler(CommandHandler("reset", reset_context))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    application.run_polling()
+
+
+
+"""
+import os
+import logging
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
+import g4f
+from g4f import providers
+
+# Настройка бота
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if not TELEGRAM_BOT_TOKEN:
+    raise ValueError("Отсутствует переменная окружения TELEGRAM_BOT_TOKEN")
+
+logging.basicConfig(level=logging.INFO)
+
+# Создание приложения
+application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+
+user_contexts = {}
+
+available_providers = [provider for provider in dir(providers) if not provider.startswith("__")]
+provider_models = {
+    "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
+    "Forefront": ["claude-v1", "claude-v1.3"],
+    "DeepAI": ["deepai-gpt", "deepai-gpt-4"],
+    # Добавьте другие провайдеры и модели здесь
+}
+
+def get_llm_response(prompt, context, provider_name, model_name):
+    full_prompt = context + "\n" + prompt if context else prompt
+
+    provider = getattr(providers, provider_name, None)
+    if provider is None:
+        raise ValueError(f"Provider {provider_name} not found")
+
+    response = g4f.ChatCompletion.create(
+        provider=provider,
+        model=model_name,
+        messages=[{"role": "user", "content": full_prompt}]
+    )
+    return response['choices'][0]['message']['content']
+
+async def start(update: Update, context: CallbackContext):
+    user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
     await context.bot.send_message(chat_id=update.message.chat_id, text="Привет! Я бот, использующий GPT-4. Сначала выберите провайдера, используя команду /setprovider.")
 
 async def set_provider(update: Update, context: CallbackContext):
@@ -108,6 +213,6 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     application.run_polling()
-    
+    """
 # конец
 
