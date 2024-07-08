@@ -93,7 +93,7 @@ async def set_provider(update: Update, context: CallbackContext):
     except ValueError:
         pass
 
-    provider_list = "\n"..join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
+    provider_list = "\n".join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
     await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
 
 async def reset_context(update: Update, context: CallbackContext):
