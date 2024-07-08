@@ -54,27 +54,37 @@ async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Привет! Я бот, использующий GPT-4. Сначала выберите модель, используя команду /setmodel.")
 
 async def set_model(update: Update, context: CallbackContext):
-    model_index = int(context.args[0]) - 1 if context.args else None
-    all_models = [model for models in provider_models.values() for model in models]
-    
-    if model_index is not None and 0 <= model_index < len(all_models):
-        model = all_models[model_index]
-        user_contexts[update.message.chat_id]["model"] = model
-        await update.message.reply_text(f"Модель установлена на {model}. Теперь выберите провайдера, используя команду /setprovider.")
-    else:
-        model_list = "\n".join([f"{i+1}. {model}" for i, model in enumerate(all_models)])
-        await update.message.reply_text(f"Пожалуйста, укажите номер одной из доступных моделей:\n{model_list}")
+    if context.args:
+        try:
+            model_index = int(context.args[0]) - 1
+            all_models = [model for models in provider_models.values() for model in models]
+            
+            if 0 <= model_index < len(all_models):
+                model = all_models[model_index]
+                user_contexts[update.message.chat_id]["model"] = model
+                await update.message.reply_text(f"Модель установлена на {model}. Теперь выберите провайдера, используя команду /setprovider.")
+                return
+        except ValueError:
+            pass
+
+    model_list = "\n".join([f"{i+1}. {model}" for i, model in enumerate([model for models in provider_models.values() for model in models])])
+    await update.message.reply_text(f"Пожалуйста, укажите номер одной из доступных моделей:\n{model_list}")
 
 async def set_provider(update: Update, context: CallbackContext):
-    provider_index = int(context.args[0]) - 1 if context.args else None
-    
-    if provider_index is not None and 0 <= provider_index < len(available_providers):
-        provider = available_providers[provider_index]
-        user_contexts[update.message.chat_id]["provider"] = provider
-        await update.message.reply_text(f"Провайдер установлен на {provider}. Теперь вы можете отправить сообщение.")
-    else:
-        provider_list = "\n".join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
-        await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
+    if context.args:
+        try:
+            provider_index = int(context.args[0]) - 1
+            
+            if 0 <= provider_index < len(available_providers):
+                provider = available_providers[provider_index]
+                user_contexts[update.message.chat_id]["provider"] = provider
+                await update.message.reply_text(f"Провайдер установлен на {provider}. Теперь вы можете отправить сообщение.")
+                return
+        except ValueError:
+            pass
+
+    provider_list = "\n".join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
+    await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
 
 async def reset_context(update: Update, context: CallbackContext):
     user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
