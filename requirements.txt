@@ -3,5 +3,6 @@ python-telegram-bot==20.0
 aiogram==3.10.0
 g4f
 curl_cffi
+nodriver
 nest_asyncio
 selenium==4.10.0
