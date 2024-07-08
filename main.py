@@ -11,7 +11,7 @@ import os
 from g4f import Provider
 from g4f.Provider import bing
 from telegram import Bot, Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Загрузка переменных окружения из файла секрета репозитория
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -54,8 +54,8 @@ def main():
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
-    dispatcher.add_handler(MessageHandler(Filters.photo, handle_photo))
+    dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    dispatcher.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
     updater.start_polling()
     updater.idle()
