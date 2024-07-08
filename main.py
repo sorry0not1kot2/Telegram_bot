@@ -71,17 +71,21 @@ async def set_model(update: Update, context: CallbackContext):
     await update.message.reply_text(f"Пожалуйста, укажите номер одной из доступных моделей:\n{model_list}")
 
 async def set_provider(update: Update, context: CallbackContext):
-    if context.args:
-        try:
-            provider_index = int(context.args[0]) - 1
-            
-            if 0 <= provider_index < len(available_providers):
-                provider = available_providers[provider_index]
-                user_contexts[update.message.chat_id]["provider"] = provider
-                await update.message.reply_text(f"Провайдер установлен на {provider}. Теперь вы можете отправить сообщение.")
-                return
-        except ValueError:
-            pass
+    if not context.args:
+        provider_list = "\n".join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
+        await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
+        return
+
+    try:
+        provider_index = int(context.args[0]) - 1
+        
+        if 0 <= provider_index < len(available_providers):
+            provider = available_providers[provider_index]
+            user_contexts[update.message.chat_id]["provider"] = provider
+            await update.message.reply_text(f"Провайдер установлен на {provider}. Теперь вы можете отправить сообщение.")
+            return
+    except ValueError:
+        pass
 
     provider_list = "\n".join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
     await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
