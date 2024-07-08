@@ -12,6 +12,7 @@ from g4f import Provider
 from g4f.Provider import Bing
 from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+import asyncio
 
 # Загрузка переменных окружения из файла секрета репозитория
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -19,27 +20,36 @@ bot = Bot(BOT_TOKEN)
 
 async def handle_text_request(query):
     # Используем метод для обработки текстовых запросов
-    response = Bing.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
-    result = ""
-    for message in response:
-        result += message['choices'][0]['message']['content']
-    return result
+    try:
+        response = Bing.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
+        result = ""
+        for message in response:
+            result += message['choices'][0]['message']['content']
+        return result
+    except Exception as e:
+        return f"Произошла ошибка: {e}"
 
 async def generate_image(prompt):
     # Используем метод для генерации изображений
-    response = Bing.create_image(prompt=prompt)
-    result = ""
-    for image in response:
-        result += image['data'][0]['url']
-    return result
+    try:
+        response = Bing.create_image(prompt=prompt)
+        result = ""
+        for image in response:
+            result += image['data'][0]['url']
+        return result
+    except Exception as e:
+        return f"Произошла ошибка: {e}"
 
 async def analyze_photo(photo_path, description):
     # Используем метод для анализа изображений
-    response = Bing.analyze_image(image_path=photo_path, description=description)
-    result = ""
-    for analysis in response:
-        result += analysis['result']
-    return result
+    try:
+        response = Bing.analyze_image(image_path=photo_path, description=description)
+        result = ""
+        for analysis in response:
+            result += analysis['result']
+        return result
+    except Exception as e:
+        return f"Произошла ошибка: {e}"
 
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Привет! Я бот, который может отвечать на текстовые запросы, генерировать изображения и анализировать фото. Отправьте текст или изображение с описанием.')
@@ -71,6 +81,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
     
 """
 # Список провайдеров и моделей
