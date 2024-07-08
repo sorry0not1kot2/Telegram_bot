@@ -11,7 +11,7 @@ import os
 from g4f import Provider
 from g4f.Provider import bing
 from telegram import Bot, Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Загрузка переменных окружения из файла секрета репозитория
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -49,19 +49,17 @@ def handle_photo(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(analysis)
 
 def main():
-    updater = Updater(BOT_TOKEN)
+    application = Application.builder().token(BOT_TOKEN).build()
 
-    dispatcher = updater.dispatcher
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    dispatcher.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-
-    updater.start_polling()
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
+
 
 """
 # Список провайдеров и моделей
