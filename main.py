@@ -27,7 +27,7 @@ application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 user_contexts = {}
 
 # Фильтрация провайдеров, чтобы включить только те, которые могут быть использованы для генерации текста
-available_providers = [provider for provider in dir(providers) if provider not in ["base_provider", "helper", "retry_provider", "types"]]
+available_providers = [provider for provider in dir(providers) if callable(getattr(providers, provider)) and not provider.startswith("__")]
 provider_models = {
     "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
     "Forefront": ["claude-v1", "claude-v1.3"],
