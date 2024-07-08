@@ -21,7 +21,7 @@ async def handle_text_request(query):
     # Используем метод для обработки текстовых запросов
     response = Bing.create_completion(model="gpt-4", messages=[{"role": "user", "content": query}])
     result = ""
-    async for message in response:
+    for message in response:
         result += message['choices'][0]['message']['content']
     return result
 
@@ -29,7 +29,7 @@ async def generate_image(prompt):
     # Используем метод для генерации изображений
     response = Bing.create_image(prompt=prompt)
     result = ""
-    async for image in response:
+    for image in response:
         result += image['data'][0]['url']
     return result
 
@@ -37,7 +37,7 @@ async def analyze_photo(photo_path, description):
     # Используем метод для анализа изображений
     response = Bing.analyze_image(image_path=photo_path, description=description)
     result = ""
-    async for analysis in response:
+    for analysis in response:
         result += analysis['result']
     return result
 
