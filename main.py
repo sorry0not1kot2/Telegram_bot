@@ -26,23 +26,22 @@ application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
 user_contexts = {}
 
-# Список провайдеров из репозитория gpt4free
-available_providers = [
-    "You", "Forefront", "DeepAI", "ChatGPT", "OpenAI", "Anthropic", "Cohere", "AI21", "AlephAlpha"
-]
+# Список провайдеров и моделей
 provider_models = {
     "You": ["gpt-3.5-turbo", "gpt-4", "gpt-4o"],
     "Forefront": ["claude-v1", "claude-v1.3"],
-    "DeepAI": ["deepai-gpt", "deepai-gpt-4"],
-    # Добавьте другие провайдеры и модели здесь
+    "DeepAI": ["deepai-gpt", "deepai-gpt-4"]
 }
+
+available_providers = list(provider_models.keys())
 
 def get_llm_response(prompt, context, provider_name, model_name):
     full_prompt = context + "\n" + prompt if context else prompt
 
     provider = getattr(providers, provider_name, None)
     if provider is None:
-        raise ValueError(f"Provider {provider_name} not found. Available providers are: {dir(providers)}")
+        available_providers = dir(providers)
+        raise ValueError(f"Provider {provider_name} not found. Available providers are: {available_providers}")
 
     response = g4f.ChatCompletion.create(
         provider=provider,
@@ -124,7 +123,6 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     application.run_polling()
-
-
+    
 # конец
 
