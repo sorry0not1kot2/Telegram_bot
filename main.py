@@ -9,10 +9,9 @@
 
 import os
 import logging
+import importlib
 from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackContext
-import g4f
-from g4f import providers
 
 # Настройка бота
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -38,17 +37,23 @@ available_providers = list(provider_models.keys())
 def get_llm_response(prompt, context, provider_name, model_name):
     full_prompt = context + "\n" + prompt if context else prompt
 
-    provider = getattr(providers, provider_name, None)
-    if provider is None:
-        available_providers = dir(providers)
-        raise ValueError(f"Provider {provider_name} not found. Available providers are: {available_providers}")
+    try:
+        provider_module = importlib.import_module(f"g4f.providers.{provider_name}")
+    except ModuleNotFoundError:
+        raise ValueError(f"Provider {provider_name} not found. Ensure the provider file exists in the g4f/providers directory.")
 
-    response = g4f.ChatCompletion.create(
-        provider=provider,
+    response = provider_module.ChatCompletion.create(
         model=model_name,
         messages=[{"role": "user", "content": full_prompt}]
     )
     return response['choices'][0]['message']['content']
+
+def list_providers():
+    import g4f
+    from g4f import providers
+
+    available_providers = dir(providers)
+    logging.info(f"Available providers: {available_providers}")
 
 async def start(update: Update, context: CallbackContext):
     user_contexts[update.message.chat_id] = {"context": "", "provider": "", "model": ""}
@@ -88,7 +93,7 @@ async def set_provider(update: Update, context: CallbackContext):
     except ValueError:
         pass
 
-    provider_list = "\n".join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
+    provider_list = "\n"..join([f"{i+1}. {provider}" for i, provider in enumerate(available_providers)])
     await update.message.reply_text(f"Пожалуйста, укажите номер одного из доступных провайдеров:\n{provider_list}")
 
 async def reset_context(update: Update, context: CallbackContext):
@@ -116,6 +121,7 @@ async def handle_message(update: Update, context: CallbackContext):
     await update.message.reply_text(response)
 
 if __name__ == '__main__':
+    list_providers()  # Вывод списка провайдеров при запуске
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("setmodel", set_model))
     application.add_handler(CommandHandler("setprovider", set_provider))
