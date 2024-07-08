@@ -17,36 +17,39 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
 
-def handle_text_request(query):
-    response = bing.process(query)
-    return response
+async def handle_text_request(query):
+    # Используем метод для обработки текстовых запросов
+    response = bing.ChatCompletion.create(prompt=query)
+    return response['choices'][0]['text']
 
-def generate_image(prompt):
-    image_url = bing.generate_image(prompt)
-    return image_url
+async def generate_image(prompt):
+    # Используем метод для генерации изображений
+    image_url = bing.ImageGeneration.create(prompt=prompt)
+    return image_url['data'][0]['url']
 
-def analyze_photo(photo_path, description):
-    analysis = bing.analyze_image(photo_path, description)
-    return analysis
+async def analyze_photo(photo_path, description):
+    # Используем метод для анализа изображений
+    analysis = bing.ImageAnalysis.create(image_path=photo_path, description=description)
+    return analysis['result']
 
-def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text('Привет! Я бот, который может отвечать на текстовые запросы, генерировать изображения и анализировать фото. Отправьте текст или изображение с описанием.')
+async def start(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text('Привет! Я бот, который может отвечать на текстовые запросы, генерировать изображения и анализировать фото. Отправьте текст или изображение с описанием.')
 
-def handle_message(update: Update, context: CallbackContext) -> None:
+async def handle_message(update: Update, context: CallbackContext) -> None:
     query = update.message.text
     if "нарисуй" in query.lower():
-        image_url = generate_image(query)
-        update.message.reply_text(f'Вот ваше изображение: {image_url}')
+        image_url = await generate_image(query)
+        await update.message.reply_text(f'Вот ваше изображение: {image_url}')
     else:
-        response = handle_text_request(query)
-        update.message.reply_text(response)
+        response = await handle_text_request(query)
+        await update.message.reply_text(response)
 
-def handle_photo(update: Update, context: CallbackContext) -> None:
-    photo_file = update.message.photo[-1].get_file()
-    photo_path = photo_file.download()
+async def handle_photo(update: Update, context: CallbackContext) -> None:
+    photo_file = await update.message.photo[-1].get_file()
+    photo_path = await photo_file.download()
     description = update.message.caption if update.message.caption else "анализировать"
-    analysis = analyze_photo(photo_path, description)
-    update.message.reply_text(analysis)
+    analysis = await analyze_photo(photo_path, description)
+    await update.message.reply_text(analysis)
 
 def main():
     application = Application.builder().token(BOT_TOKEN).build()
@@ -59,8 +62,7 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
+    
 """
 # Список провайдеров и моделей
 provider_models = {
