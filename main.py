@@ -19,17 +19,17 @@ bot = Bot(BOT_TOKEN)
 
 async def handle_text_request(query):
     # Используем метод для обработки текстовых запросов
-    response = Bing.ChatCompletion.create(prompt=query)
+    response = Bing.create_completion(prompt=query)
     return response['choices'][0]['text']
 
 async def generate_image(prompt):
     # Используем метод для генерации изображений
-    image_url = Bing.ImageGeneration.create(prompt=prompt)
+    image_url = Bing.create_image(prompt=prompt)
     return image_url['data'][0]['url']
 
 async def analyze_photo(photo_path, description):
     # Используем метод для анализа изображений
-    analysis = Bing.ImageAnalysis.create(image_path=photo_path, description=description)
+    analysis = Bing.analyze_image(image_path=photo_path, description=description)
     return analysis['result']
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -37,7 +37,7 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
     query = update.message.text
-    if "нарисуй" in query.lower():
+    if "нарисуй" в query.lower():
         image_url = await generate_image(query)
         await update.message.reply_text(f'Вот ваше изображение: {image_url}')
     else:
