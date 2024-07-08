@@ -12,7 +12,6 @@ from g4f import Provider
 from g4f.Provider import Bing
 from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
-import asyncio
 
 # Загрузка переменных окружения из файла секрета репозитория
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -30,15 +29,18 @@ async def handle_text_request(query):
         return f"Произошла ошибка: {e}"
 
 async def generate_image(prompt):
-    # Используем метод для генерации изображений
-    try:
-        response = Bing.create_image(prompt=prompt)
-        result = ""
-        for image in response:
-            result += image['data'][0]['url']
-        return result
-    except Exception as e:
-        return f"Произошла ошибка: {e}"
+    # Проверка наличия метода create_image
+    if hasattr(Bing, 'create_image'):
+        try:
+            response = Bing.create_image(prompt=prompt)
+            result = ""
+            for image in response:
+                result += image['data'][0]['url']
+            return result
+        except Exception as e:
+            return f"Произошла ошибка: {e}"
+    else:
+        return "Метод create_image не поддерживается."
 
 async def analyze_photo(photo_path, description):
     # Используем метод для анализа изображений
