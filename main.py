@@ -9,7 +9,7 @@ from g4f import Provider
 from g4f.Provider import You
 from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
-from nodriver import Nodriver
+from nodriver import Browser
 
 # Настройка логирования
 logging.basicConfig(
@@ -21,9 +21,6 @@ logger = logging.getLogger(__name__)
 # Загрузка переменных окружения из файла секрета репозитория
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 bot = Bot(BOT_TOKEN)
-
-# Инициализация Nodriver
-nodriver = Nodriver()
 
 async def handle_text_request(query):
     logger.info(f"Handling text request: {query}")
@@ -106,6 +103,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 """
 # Bing но требует капчу или прокси
