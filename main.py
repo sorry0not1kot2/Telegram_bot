@@ -36,8 +36,6 @@ if __name__ == '__main__':
 
 
 
-
-
 """
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
