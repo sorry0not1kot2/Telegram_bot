@@ -22,14 +22,18 @@ def list_available_providers_and_models():
         # Получение списка доступных моделей для каждого провайдера
         for provider_name in available_providers:
             provider = getattr(g4f.Provider, provider_name)
-            available_models = provider().models
-            logger.info(f"Доступные модели для провайдера {provider_name}: {available_models}")
+            if hasattr(provider, 'models'):
+                available_models = provider().models
+                logger.info(f"Доступные модели для провайдера {provider_name}: {available_models}")
+            else:
+                logger.info(f"Провайдер {provider_name} не имеет атрибута 'models'")
 
     except Exception as e:
         logger.error(f"Error listing providers and models: {e}")
 
 if __name__ == '__main__':
     list_available_providers_and_models()
+()
 
 
 
