@@ -13,20 +13,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def list_available_models():
+def list_available_providers():
     try:
         # Получение списка доступных провайдеров
         available_providers = [provider for provider in dir(g4f.Provider) if not provider.startswith("__")]
-        for provider_name in available_providers:
-            provider = getattr(g4f.Provider, provider_name)
-            available_models = provider().models
-            logger.info(f"Доступные модели для провайдера {provider_name}: {available_models}")
+        logger.info(f"Доступные провайдеры: {available_providers}")
 
     except Exception as e:
-        logger.error(f"Error listing models: {e}")
+        logger.error(f"Error listing providers: {e}")
 
 if __name__ == '__main__':
-    list_available_models()
+    list_available_providers()
+
 
 
 
