@@ -5,27 +5,20 @@
 import g4f
 import logging
 
-# Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def list_available_providers_and_models():
-    try:
-        # Получение списка доступных провайдеров
-        available_providers = [provider for provider in dir(g4f.Provider) if not provider.startswith("__")]
-        logger.info(f"Доступные провайдеры: {available_providers}")
+    available_providers = [provider for provider in dir(g4f.Provider) if not provider.startswith("__")]
+    logger.info(f"Доступные провайдеры: {available_providers}")
 
-        # Получение списка доступных моделей для каждого провайдера
-        for provider_name in available_providers:
-            provider = getattr(g4f.Provider, provider_name)
-            if hasattr(provider, 'models'):
-                available_models = provider().models
-                logger.info(f"Доступные модели для провайдера {provider_name}: {available_models}")
-            else:
-                logger.info(f"Провайдер {provider_name} не имеет атрибута 'models'")
-
-    except Exception as e:
-        logger.error(f"Error listing providers and models: {e}")
+    for provider_name in available_providers:
+        provider = getattr(g4f.Provider, provider_name)
+        if hasattr(provider, 'models'):
+            available_models = provider().models
+            logger.info(f"Доступные модели для провайдера {provider_name}: {available_models}")
+        else:
+            logger.info(f"Провайдер {provider_name} не имеет атрибута 'models'")
 
 if __name__ == '__main__':
     list_available_providers_and_models()
