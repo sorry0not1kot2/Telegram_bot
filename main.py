@@ -33,8 +33,6 @@ def list_available_providers_and_models():
 
 if __name__ == '__main__':
     list_available_providers_and_models()
-()
-
 
 
 
