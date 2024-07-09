@@ -22,7 +22,7 @@ async def handle_text_request(query):
     logger.info(f"Handling text request: {query}")
     try:
         response = g4f.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             provider=g4f.Provider.You,
             messages=[{"role": "user", "content": query}]
         )
