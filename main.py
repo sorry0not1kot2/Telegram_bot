@@ -22,9 +22,9 @@ async def handle_text_request(query):
     logger.info(f"Handling text request: {query}")
     try:
         response = g4f.ChatCompletion.create(
-            model="gpt-4o",
-            provider=g4f.Provider.You,
-            messages=[{"role": "user", "content": query}]
+            model="deepai-gpt-4",
+            messages=[{"role": "user", "content": query}],
+            options={"args": ["--no-sandbox"]}
         )
         result = response['choices'][0]['message']['content']
         logger.info(f"Text request result: {result}")
@@ -35,7 +35,7 @@ async def handle_text_request(query):
 
 async def start(update: Update, context: CallbackContext) -> None:
     logger.info("Received /start command")
-    await update.message.reply_text('Привет! Я бот, который работает на LLM GPT-4.')
+    await update.message.reply_text('Привет! Я бот, который работает на LLM deepai-gpt-4.')
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
     user_message = update.message.text
@@ -54,6 +54,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 """
 # Список провайдеров и моделей
