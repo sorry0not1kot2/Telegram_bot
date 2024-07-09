@@ -2,6 +2,37 @@
 #
 #
 # файл mmain.py
+
+import g4f
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+def list_available_models_and_providers():
+    try:
+        # Получение списка доступных моделей
+        available_models = g4f.models.list_models()
+        logger.info(f"Доступные модели: {available_models}")
+
+        # Получение списка доступных провайдеров
+        available_providers = g4f.providers.list_providers()
+        logger.info(f"Доступные провайдеры: {available_providers}")
+
+    except Exception as e:
+        logger.error(f"Error listing models and providers: {e}")
+
+if __name__ == '__main__':
+    list_available_models_and_providers()
+
+
+
+
+"""
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 import g4f
@@ -53,7 +84,7 @@ def main():
 
 if __name__ == '__main__':
     main()
-
+"""
 
 """
 # Bing но требует капчу или прокси
