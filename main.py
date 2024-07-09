@@ -2,35 +2,29 @@
 #
 #
 # файл mmain.py
+
 import g4f
 import logging
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-def list_available_models_and_providers():
+def list_available_providers():
     try:
         # Получение списка доступных провайдеров
-        available_providers = g4f.Provider.__subclasses__()
-        logger.info("Доступные провайдеры:")
-        for provider in available_providers:
-            logger.info(provider.__name__)
-
-        # Получение списка доступных моделей для каждого провайдера
-        for provider in available_providers:
-            provider_instance = provider()
-            available_models = provider_instance.models
-            logger.info(f"Доступные модели для провайдера {provider.__name__}: {available_models}")
+        available_providers = [provider for provider in dir(g4f.Provider) if not provider.startswith("__")]
+        logger.info(f"Доступные провайдеры: {available_providers}")
 
     except Exception as e:
-        logger.error(f"Error listing models and providers: {e}")
+        logger.error(f"Error listing providers: {e}")
 
 if __name__ == '__main__':
-    list_available_models_and_providers()
+    list_available_providers()
+
 
 
 
