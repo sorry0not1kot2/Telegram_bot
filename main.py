@@ -2,58 +2,97 @@
 #
 #
 # файл mmain.py
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
-import g4f
 import os
+import asyncio
 import logging
+import base64
+from telebot.async_telebot import AsyncTeleBot
+import g4f
 
 # Настройка логирования
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
-# Загрузка переменных окружения из файла секрета репозитория
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+# Настройка бота
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+bot = AsyncTeleBot(BOT_TOKEN)
 
-async def handle_text_request(query):
-    logger.info(f"Handling text request: {query}")
+# Функция для получения токена аутентификации
+def get_auth() -> str:
+    auth_uuid = "507a52ad-7e69-496b-aee0-1c9863c7c819"
+    auth_token = f"public-token-live-{auth_uuid}:public-token-live-{auth_uuid}"
+    auth = base64.standard_b64encode(auth_token.encode()).decode()
+    return f"Basic {auth}"
+
+# Обработчик команды /start
+@bot.message_handler(commands=['start'])
+async def start(message):
+    await bot.send_message(message.chat.id, 'Привет! Я бот для общения с LLM GPT-4o.')
+
+# Словарь для хранения истории чата
+chat_history = {}
+
+# Асинхронная функция для обработки сообщений
+@bot.message_handler(content_types=['text'])
+async def handle_message(message):
     try:
-        response = g4f.ChatCompletion.create(
-            model="deepai-gpt-4",
-            messages=[{"role": "user", "content": query}],
-            options={"args": ["--no-sandbox"]}
+        user_id = message.chat.id
+        user_message = message.text
+        
+        # Инициализация истории чата для нового пользователя
+        if user_id not in chat_history:
+            chat_history[user_id] = []
+
+        # Добавление сообщения пользователя в историю чата
+        chat_history[user_id].append({"role": "user", "content": user_message})
+        
+        auth_header = get_auth()
+        headers = {"Authorization": auth_header}
+        data = {
+            "model": "gpt-4o",
+            "messages": chat_history[user_id]
+        }
+        
+        # Логирование запроса
+        logging.info(f"URL: https://api.you.com/v1/chat/completions")
+        logging.info(f"Заголовки: {headers}")
+        logging.info(f"Данные: {data}")
+        
+        response = await g4f.ChatCompletion.create(
+            model="gpt-4o",
+            messages=chat_history[user_id],
+            headers=headers,
+            no_sandbox=True  # Добавляем параметр no_sandbox
         )
-        result = response['choices'][0]['message']['content']
-        logger.info(f"Text request result: {result}")
-        return result
+        
+        # Логирование статуса и текста ответа
+        logging.info(f"Статус ответа: {response.status}")
+        response_text = response.text
+        logging.info(f"Текст ответа: {response_text}")
+        
+        # Проверка на пустой ответ
+        if response.status != 200 or not response_text:
+            raise ValueError("Пустой или некорректный ответ от API")
+        
+        response_data = response.json()
+        bot_response = response_data['choices'][0]['message']['content']
+        
+        # Добавление ответа бота в историю чата
+        chat_history[user_id].append({"role": "assistant", "content": bot_response})
+        
+        await bot.send_message(message.chat.id, bot_response)
     except Exception as e:
-        logger.error(f"Error handling text request: {e}")
-        return f"Произошла ошибка: {e}"
+        logging.error(f"Ошибка при обработке сообщения: {e}")
+        await bot.send_message(message.chat.id, "Произошла ошибка при обработке вашего сообщения.")
 
-async def start(update: Update, context: CallbackContext) -> None:
-    logger.info("Received /start command")
-    await update.message.reply_text('Привет! Я бот, который работает на LLM deepai-gpt-4.')
+# Асинхронная функция main для запуска бота
+async def main():
+    logging.info("Бот запущен")
+    await bot.polling(non_stop=True)
 
-async def handle_message(update: Update, context: CallbackContext) -> None:
-    user_message = update.message.text
-    response = await handle_text_request(user_message)
-    await update.message.reply_text(response)
-    logger.info(f"Received message: {user_message}")
-
-def main():
-    application = Application.builder().token(BOT_TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-    logger.info("Starting bot")
-    application.run_polling()
-
+# Запуск бота
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
+
 
 
 """
