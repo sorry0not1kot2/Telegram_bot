@@ -78,7 +78,7 @@ async def stream_message(chat_id, message):
     for word in words:
         current_message += word + " "
         await bot.send_chat_action(chat_id, 'typing')
-        await asyncio.sleep(0.1)  # Задержка для имитации печатания
+        await asyncio.sleep(0.3)  # Задержка для имитации печатания и предотвращения ошибки 429
         await bot.edit_message_text(current_message, chat_id, message_id)
 
 # Обработчик команды /start
@@ -121,6 +121,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 
 
