@@ -6,6 +6,7 @@ import os
 import asyncio
 import logging
 import base64
+import json
 from telebot.async_telebot import AsyncTeleBot
 import g4f
 
@@ -71,7 +72,7 @@ async def handle_message(message):
         if not response:
             raise ValueError("Пустой или некорректный ответ от API")
         
-        response_data = eval(response)  # Преобразуем строку в словарь
+        response_data = json.loads(response)  # Преобразуем строку в словарь
         bot_response = response_data['choices'][0]['message']['content']
         
         # Добавление ответа бота в историю чата
@@ -90,7 +91,6 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
-
 
 
 """
