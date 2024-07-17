@@ -71,7 +71,7 @@ async def handle_message(message):
         if not response:
             raise ValueError("Пустой или некорректный ответ от API")
         
-        response_data = response.json()
+        response_data = eval(response)  # Преобразуем строку в словарь
         bot_response = response_data['choices'][0]['message']['content']
         
         # Добавление ответа бота в историю чата
