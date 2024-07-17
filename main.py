@@ -4,7 +4,9 @@ import os
 import asyncio
 import logging
 import json
-from telebot.async_telebot import AsyncTeleBot
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import ParseMode
+from aiogram.utils import executor
 import g4f
 
 # Настройка логирования
@@ -13,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = AsyncTeleBot(BOT_TOKEN)
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher(bot)
 
 # Словарь для хранения истории чата
 chat_history = {}
@@ -79,7 +82,7 @@ async def stream_message(chat_id, message):
         current_message += word + " "
         await bot.send_chat_action(chat_id, 'typing')
         try:
-            await bot.edit_message_text(current_message, chat_id, message_id)
+            await bot.edit_message_text(current_message, chat_id, message_id, parse_mode=ParseMode.MARKDOWN)
         except Exception as e:
             if "429" in str(e):
                 retry_after = int(str(e).split("retry after ")[1])
@@ -88,25 +91,25 @@ async def stream_message(chat_id, message):
                 sent_message = await bot.send_message(chat_id, "...")
                 message_id = sent_message.message_id
                 current_message = word + " "
-                await bot.edit_message_text(current_message, chat_id, message_id)
+                await bot.edit_message_text(current_message, chat_id, message_id, parse_mode=ParseMode.MARKDOWN)
             else:
                 logging.error(f"Ошибка при редактировании сообщения: {e}")
         await asyncio.sleep(0.5)  # Увеличенная задержка для предотвращения ошибки 429
 
 # Обработчик команды /start
-@bot.message_handler(commands=['start'])
-async def start(message):
-    await bot.send_message(message.chat.id, 'Привет! Я бот для общения с LLM GPT-4o.')
+@dp.message_handler(commands=['start'])
+async def start(message: types.Message):
+    await message.answer('Привет! Я бот для общения с LLM GPT-4o.')
 
 # Обработчик команды /clear
-@bot.message_handler(commands=['clear'])
-async def clear(message):
+@dp.message_handler(commands=['clear'])
+async def clear(message: types.Message):
     chat_history.pop(message.chat.id, None)
-    await bot.send_message(message.chat.id, "История чата очищена.")
+    await message.answer("История чата очищена.")
 
 # Асинхронная функция для обработки сообщений
-@bot.message_handler(content_types=['text'])
-async def handle_message(message):
+@dp.message_handler(content_types=['text'])
+async def handle_message(message: types.Message):
     user_id = message.chat.id
     user_message = message.text
     logging.info(f"Получено сообщение: {user_message}")
@@ -120,19 +123,10 @@ async def handle_message(message):
     # Стриминг ответа
     await stream_message(user_id, bot_response)
 
-# Асинхронная функция main для запуска бота
-async def main():
-    while True:
-        try:
-            logging.info("Бот запущен")
-            await bot.polling(non_stop=True)
-        except Exception as e:
-            logging.error(f"Ошибка в основном цикле бота: {e}")
-            await asyncio.sleep(5)  # Пауза перед повторной попыткой
-
 # Запуск бота
 if __name__ == '__main__':
-    asyncio.run(main())
+    executor.start_polling(dp, skip_updates=True)
+
 
 
 
