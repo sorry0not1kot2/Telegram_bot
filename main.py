@@ -64,13 +64,11 @@ async def handle_message(message):
             no_sandbox=True  # Добавляем параметр no_sandbox
         )
         
-        # Логирование статуса и текста ответа
-        logging.info(f"Статус ответа: {response.status_code}")
-        response_text = response.text
-        logging.info(f"Текст ответа: {response_text}")
+        # Логирование текста ответа
+        logging.info(f"Текст ответа: {response}")
         
         # Проверка на пустой ответ
-        if response.status_code != 200 or not response_text:
+        if not response:
             raise ValueError("Пустой или некорректный ответ от API")
         
         response_data = response.json()
@@ -92,6 +90,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 
 """
