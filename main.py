@@ -4,7 +4,7 @@ import asyncio
 import logging
 import json
 from telebot.async_telebot import AsyncTeleBot
-import g4f
+from g4f_1 import ChatGPT4o  # Импортируем класс из нового файла
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -37,10 +37,8 @@ async def handle_message(message):
         chat_history[user_id].append({"role": "user", "content": user_message})
 
         logging.info("Отправка запроса к g4f")
-        response = g4f.ChatGPT4o(
-            prompt=user_message,
-            provider="http://ChatGPT4o.one/"
-        )
+        gpt4o = ChatGPT4o(provider_url="http://ChatGPT4o.one/")
+        response = gpt4o.create(prompt=user_message)
         logging.info(f"Получен ответ от g4f: {response}")
 
         # Проверка на пустой ответ
@@ -49,16 +47,12 @@ async def handle_message(message):
             await bot.send_message(message.chat.id, "Извините, я не смог сгенерировать ответ. Попробуйте еще раз.")
             return
 
-        if isinstance(response, str):
-            try:
-                response_data = json.loads(response)
-                bot_response = response_data['choices'][0]['message']['content']
-            except json.JSONDecodeError:
-                bot_response = response  # Используем ответ как есть, если это не JSON
+        if isinstance(response, dict) and 'error' in response:
+            bot_response = response['error']
         elif isinstance(response, dict):
             bot_response = response.get('choices', [{}])[0].get('message', {}).get('content', 'Нет ответа')
         else:
-            raise ValueError("Неожиданный формат ответа от API")
+            bot_response = response
 
         # Добавление ответа бота в историю чата
         chat_history[user_id].append({"role": "assistant", "content": bot_response})
@@ -80,3 +74,4 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
