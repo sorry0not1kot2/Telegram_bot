@@ -1,6 +1,7 @@
 # файл requirements.txt
 python-telegram-bot==20.0
 aiogram==3.10.0
+telebot
 g4f
 curl_cffi
 nodriver
