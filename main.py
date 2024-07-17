@@ -71,30 +71,6 @@ async def get_gpt_response(user_id, user_message):
         logging.error(f"Ошибка при обработке сообщения: {e}")
         return "Произошла ошибка при обработке вашего сообщения."
 
-# Функция для стриминга сообщений по одному слову
-async def stream_message(chat_id, message):
-    words = message.split()
-    current_message = ""
-    sent_message = await bot.send_message(chat_id, "...")
-    message_id = sent_message.message_id
-    for word in words:
-        current_message += word + " "
-        await bot.send_chat_action(chat_id, 'typing')
-        try:
-            await bot.edit_message_text(current_message, chat_id, message_id, parse_mode="Markdown")
-        except Exception as e:
-            if "429" in str(e):
-                retry_after = int(str(e).split("retry after ")[1])
-                logging.warning(f"Too many requests. Retrying after {retry_after} seconds.")
-                await asyncio.sleep(retry_after)
-                sent_message = await bot.send_message(chat_id, "...")
-                message_id = sent_message.message_id
-                current_message = word + " "
-                await bot.edit_message_text(current_message, chat_id, message_id, parse_mode="Markdown")
-            else:
-                logging.error(f"Ошибка при редактировании сообщения: {e}")
-        await asyncio.sleep(0.5)  # Увеличенная задержка для предотвращения ошибки 429
-
 # Обработчик команды /start
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
@@ -117,15 +93,21 @@ async def handle_message(message: types.Message):
     if user_id not in chat_history:
         chat_history[user_id] = []
 
+    # Отправка сообщения "Думаю..."
+    thinking_message = await message.answer("Думаю...")
+
     bot_response = await get_gpt_response(user_id, user_message)
 
-    # Стриминг ответа
-    await stream_message(user_id, bot_response)
+    # Удаление сообщения "Думаю..."
+    await bot.delete_message(chat_id=user_id, message_id=thinking_message.message_id)
+
+    # Разбиение длинного ответа на части и отправка их по частям
+    for part in split_message(bot_response):
+        await message.answer(part)
 
 # Запуск бота
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
 
 
 
