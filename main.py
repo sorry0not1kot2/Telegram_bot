@@ -57,7 +57,7 @@ async def handle_message(message):
         logging.info(f"Заголовки: {headers}")
         logging.info(f"Данные: {data}")
         
-        response = await g4f.ChatCompletion.create(
+        response = g4f.ChatCompletion.create(
             model="gpt-4o",
             messages=chat_history[user_id],
             headers=headers,
@@ -92,7 +92,6 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
-
 
 
 """
