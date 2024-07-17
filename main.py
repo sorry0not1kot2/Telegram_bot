@@ -73,6 +73,8 @@ async def get_gpt_response(user_id, user_message):
 async def stream_message(chat_id, message):
     words = message.split()
     current_message = ""
+    sent_message = await bot.send_message(chat_id, "...")
+    message_id = sent_message.message_id
     for word in words:
         current_message += word + " "
         await bot.send_chat_action(chat_id, 'typing')
@@ -120,7 +122,6 @@ async def main():
 if __name__ == '__main__':
     asyncio.run(main())
 
-    asyncio.run(main())
 
 
 
