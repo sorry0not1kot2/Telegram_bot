@@ -17,6 +17,10 @@ bot = AsyncTeleBot(BOT_TOKEN)
 # Словарь для хранения истории чата
 chat_history = {}
 
+# Функция для разбиения длинного сообщения на части
+def split_message(message, max_length=4000):
+    return [message[i:i + max_length] for i in range(0, len(message), max_length)]
+
 # Асинхронная функция для получения ответа от GPT
 async def get_gpt_response(user_id, user_message):
     try:
@@ -77,7 +81,10 @@ async def handle_message(message):
         chat_history[user_id] = []
 
     bot_response = await get_gpt_response(user_id, user_message)
-    await bot.send_message(message.chat.id, bot_response)
+
+    # Разбиение длинного ответа на части и отправка их по частям
+    for part in split_message(bot_response):
+        await bot.send_message(message.chat.id, part)
 
 # Асинхронная функция main для запуска бота
 async def main():
