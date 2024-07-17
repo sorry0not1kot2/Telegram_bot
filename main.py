@@ -1,11 +1,9 @@
 # файл бота main.py
-
 import os
 import asyncio
 import logging
 import json
-from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
+from telebot.async_telebot import AsyncTeleBot
 import g4f
 
 # Настройка логирования
@@ -14,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+bot = AsyncTeleBot(BOT_TOKEN)
 
 # Словарь для хранения истории чата
 chat_history = {}
@@ -72,19 +69,19 @@ async def get_gpt_response(user_id, user_message):
         return "Произошла ошибка при обработке вашего сообщения."
 
 # Обработчик команды /start
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
-    await message.answer('Привет! Я бот для общения с LLM GPT-4o.')
+@bot.message_handler(commands=['start'])
+async def start(message):
+    await bot.send_message(message.chat.id, 'Привет! Я бот для общения с LLM GPT-4o.')
 
 # Обработчик команды /clear
-@dp.message_handler(commands=['clear'])
-async def clear(message: types.Message):
+@bot.message_handler(commands=['clear'])
+async def clear(message):
     chat_history.pop(message.chat.id, None)
-    await message.answer("История чата очищена.")
+    await bot.send_message(message.chat.id, "История чата очищена.")
 
 # Асинхронная функция для обработки сообщений
-@dp.message_handler(content_types=['text'])
-async def handle_message(message: types.Message):
+@bot.message_handler(content_types=['text'])
+async def handle_message(message):
     user_id = message.chat.id
     user_message = message.text
     logging.info(f"Получено сообщение: {user_message}")
@@ -94,7 +91,7 @@ async def handle_message(message: types.Message):
         chat_history[user_id] = []
 
     # Отправка сообщения "Думаю..."
-    thinking_message = await message.answer("Думаю...")
+    thinking_message = await bot.send_message(user_id, "Думаю...")
 
     bot_response = await get_gpt_response(user_id, user_message)
 
@@ -103,12 +100,21 @@ async def handle_message(message: types.Message):
 
     # Разбиение длинного ответа на части и отправка их по частям
     for part in split_message(bot_response):
-        await message.answer(part)
+        await bot.send_message(user_id, part)
+
+# Асинхронная функция main для запуска бота
+async def main():
+    while True:
+        try:
+            logging.info("Бот запущен")
+            await bot.polling(non_stop=True)
+        except Exception as e:
+            logging.error(f"Ошибка в основном цикле бота: {e}")
+            await asyncio.sleep(5)  # Пауза перед повторной попыткой
 
 # Запуск бота
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
-
+    asyncio.run(main())
 
 
 
