@@ -78,8 +78,20 @@ async def stream_message(chat_id, message):
     for word in words:
         current_message += word + " "
         await bot.send_chat_action(chat_id, 'typing')
-        await asyncio.sleep(0.3)  # Задержка для имитации печатания и предотвращения ошибки 429
-        await bot.edit_message_text(current_message, chat_id, message_id)
+        try:
+            await bot.edit_message_text(current_message, chat_id, message_id)
+        except Exception as e:
+            if "429" in str(e):
+                retry_after = int(str(e).split("retry after ")[1])
+                logging.warning(f"Too many requests. Retrying after {retry_after} seconds.")
+                await asyncio.sleep(retry_after)
+                sent_message = await bot.send_message(chat_id, "...")
+                message_id = sent_message.message_id
+                current_message = word + " "
+                await bot.edit_message_text(current_message, chat_id, message_id)
+            else:
+                logging.error(f"Ошибка при редактировании сообщения: {e}")
+        await asyncio.sleep(0.5)  # Увеличенная задержка для предотвращения ошибки 429
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -121,6 +133,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 
 
