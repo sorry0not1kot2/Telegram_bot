@@ -18,8 +18,18 @@ bot = AsyncTeleBot(BOT_TOKEN)
 chat_history = {}
 
 # Функция для разбиения длинного сообщения на части
-def split_message(message, max_length=4000):
-    return [message[i:i + max_length] for i in range(0, len(message), max_length)]
+def split_message(message, max_length=4090):
+    parts = []
+    while len(message) > max_length:
+        split_index = max_length
+        while split_index > 0 and message[split_index] not in [' ', '\n', '.']:
+            split_index -= 1
+        if split_index == 0:
+            split_index = max_length
+        parts.append(message[:split_index].rstrip())
+        message = message[split_index:].lstrip()
+    parts.append(message)
+    return parts
 
 # Асинхронная функция для получения ответа от GPT
 async def get_gpt_response(user_id, user_message):
