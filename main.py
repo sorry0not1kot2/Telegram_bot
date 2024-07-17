@@ -2,10 +2,8 @@
 #
 #
 # файл mmain.py
-import os
 import asyncio
 import logging
-import base64
 import json
 from telebot.async_telebot import AsyncTeleBot
 import g4f
@@ -14,15 +12,8 @@ import g4f
 logging.basicConfig(level=logging.INFO)
 
 # Настройка бота
-BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'
 bot = AsyncTeleBot(BOT_TOKEN)
-
-# Функция для получения токена аутентификации
-def get_auth() -> str:
-    auth_uuid = "507a52ad-7e69-496b-aee0-1c9863c7c819"
-    auth_token = f"public-token-live-{auth_uuid}:public-token-live-{auth_uuid}"
-    auth = base64.standard_b64encode(auth_token.encode()).decode()
-    return f"Basic {auth}"
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -46,23 +37,10 @@ async def handle_message(message):
         # Добавление сообщения пользователя в историю чата
         chat_history[user_id].append({"role": "user", "content": user_message})
         
-        auth_header = get_auth()
-        headers = {"Authorization": auth_header}
-        data = {
-            "model": "gpt-4o",
-            "messages": chat_history[user_id]
-        }
-        
-        # Логирование запроса
-        logging.info(f"URL: https://api.you.com/v1/chat/completions")
-        logging.info(f"Заголовки: {headers}")
-        logging.info(f"Данные: {data}")
-        
         response = g4f.ChatCompletion.create(
             model="gpt-4o",
             messages=chat_history[user_id],
-            headers=headers,
-            no_sandbox=True  # Добавляем параметр no_sandbox
+            no_sandbox=True
         )
         
         # Логирование текста ответа
@@ -72,7 +50,7 @@ async def handle_message(message):
         if not response:
             raise ValueError("Пустой или некорректный ответ от API")
         
-        response_data = json.loads(response)  # Преобразуем строку в словарь
+        response_data = json.loads(response)
         bot_response = response_data['choices'][0]['message']['content']
         
         # Добавление ответа бота в историю чата
@@ -91,7 +69,6 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
-
 
 """
 # Список провайдеров и моделей
