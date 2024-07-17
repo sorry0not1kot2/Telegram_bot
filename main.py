@@ -2,6 +2,7 @@
 #
 #
 # файл mmain.py
+import os
 import asyncio
 import logging
 import json
@@ -12,7 +13,7 @@ import g4f
 logging.basicConfig(level=logging.INFO)
 
 # Настройка бота
-BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE'
+BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Обработчик команды /start
@@ -50,7 +51,12 @@ async def handle_message(message):
         if not response:
             raise ValueError("Пустой или некорректный ответ от API")
         
-        response_data = json.loads(response)
+        try:
+            response_data = json.loads(response)
+        except json.JSONDecodeError as e:
+            logging.error(f"Ошибка декодирования JSON: {e}")
+            raise ValueError("Некорректный JSON ответ от API")
+        
         bot_response = response_data['choices'][0]['message']['content']
         
         # Добавление ответа бота в историю чата
@@ -69,6 +75,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 """
 # Список провайдеров и моделей
