@@ -69,12 +69,15 @@ async def get_gpt_response(user_id, user_message):
         logging.error(f"Ошибка при обработке сообщения: {e}")
         return "Произошла ошибка при обработке вашего сообщения."
 
-# Функция для стриминга сообщений
+# Функция для стриминга сообщений по одному слову
 async def stream_message(chat_id, message):
-    for part in split_message(message, max_length=100):
+    words = message.split()
+    current_message = ""
+    for word in words:
+        current_message += word + " "
         await bot.send_chat_action(chat_id, 'typing')
         await asyncio.sleep(0.1)  # Задержка для имитации печатания
-        await bot.send_message(chat_id, part)
+        await bot.edit_message_text(current_message, chat_id, message_id)
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
@@ -115,6 +118,8 @@ async def main():
 
 # Запуск бота
 if __name__ == '__main__':
+    asyncio.run(main())
+
     asyncio.run(main())
 
 
