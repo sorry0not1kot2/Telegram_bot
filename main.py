@@ -5,7 +5,6 @@ import asyncio
 import logging
 import json
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ParseMode
 from aiogram.utils import executor
 import g4f
 
@@ -82,7 +81,7 @@ async def stream_message(chat_id, message):
         current_message += word + " "
         await bot.send_chat_action(chat_id, 'typing')
         try:
-            await bot.edit_message_text(current_message, chat_id, message_id, parse_mode=ParseMode.MARKDOWN)
+            await bot.edit_message_text(current_message, chat_id, message_id, parse_mode="Markdown")
         except Exception as e:
             if "429" in str(e):
                 retry_after = int(str(e).split("retry after ")[1])
@@ -91,7 +90,7 @@ async def stream_message(chat_id, message):
                 sent_message = await bot.send_message(chat_id, "...")
                 message_id = sent_message.message_id
                 current_message = word + " "
-                await bot.edit_message_text(current_message, chat_id, message_id, parse_mode=ParseMode.MARKDOWN)
+                await bot.edit_message_text(current_message, chat_id, message_id, parse_mode="Markdown")
             else:
                 logging.error(f"Ошибка при редактировании сообщения: {e}")
         await asyncio.sleep(0.5)  # Увеличенная задержка для предотвращения ошибки 429
@@ -126,9 +125,7 @@ async def handle_message(message: types.Message):
 # Запуск бота
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
-
-
+)
 
 
 
