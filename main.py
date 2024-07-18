@@ -6,7 +6,6 @@ import logging
 import json
 from telebot.async_telebot import AsyncTeleBot
 import g4f
-from g4f.exceptions import G4FError
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения из .env файла
@@ -74,9 +73,6 @@ async def get_gpt_response(user_id, user_message):
         # Добавление ответа бота в историю чата
         chat_history[user_id].append({"role": "assistant", "content": bot_response})
         return bot_response
-    except G4FError as e:
-        logging.error(f"Ошибка при запросе к g4f: {e}")
-        return "Произошла ошибка при обращении к g4f."
     except Exception as e:
         logging.error(f"Ошибка при обработке сообщения: {e}")
         return "Произошла ошибка при обработке вашего сообщения."
