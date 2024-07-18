@@ -90,45 +90,38 @@ async def handle_message(message):
     user_id = message.chat.id
     user_message = message.text
     logging.info(f"Получено сообщение: {user_message}")
-    
+
     # Инициализация истории чата для нового пользователя
     chat_history.setdefault(user_id, [])
-    
+
     # Сохранение временного сообщения
     if user_id in temp_messages:
         temp_messages[user_id] += " " + user_message
     else:
         temp_messages[user_id] = user_message
-    
+
     # Задержка перед отправкой сообщения к LLM
     await asyncio.sleep(0.1)
-    
+
     # Проверка, пришло ли новое сообщение от того же пользователя
-    while True:
-        await asyncio.sleep(0.05)
-        if temp_messages[user_id] != user_message:
-            user_message = temp_messages.pop(user_id)
-            break
-        elif len(temp_messages[user_id].split()) > 1:
-            break
-    
-    # Отправка сообщения "Думаю..." один раз
-    if user_id not in temp_messages:
+    if temp_messages[user_id] == user_message:
+        # Отправка сообщения "Думаю..." один раз
         thinking_message = await bot.send_message(user_id, "Думаю...")
         temp_messages[user_id] = {"thinking_message": thinking_message, "user_message": user_message}
-    else:
-        temp_messages[user_id]["user_message"] += " " + user_message
 
-    # Получение ответа от GPT
-    bot_response = await get_gpt_response(user_id, temp_messages[user_id]["user_message"])
-    
-    # Удаление сообщения "Думаю..."
-    await bot.delete_message(chat_id=user_id, message_id=temp_messages[user_id]["thinking_message"].message_id)
-    temp_messages.pop(user_id)
-    
-    # Разбиение длинного ответа на части и отправка их по частям
-    for part in split_message(bot_response):
-        await bot.send_message(user_id, part)
+        # Получение ответа от GPT
+        bot_response = await get_gpt_response(user_id, temp_messages[user_id]["user_message"])
+
+        # Удаление сообщения "Думаю..."
+        await bot.delete_message(chat_id=user_id, message_id=temp_messages[user_id]["thinking_message"].message_id)
+        temp_messages.pop(user_id)
+
+        # Разбиение длинного ответа на части и отправка их по частям
+        for part in split_message(bot_response):
+            await bot.send_message(user_id, part)
+    else:
+        # Если пришло новое сообщение, объединяем его с предыдущим
+        temp_messages[user_id]["user_message"] += " " + user_message
 
 # Асинхронная функция main для запуска бота
 async def main():
@@ -143,6 +136,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 
 
