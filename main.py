@@ -104,7 +104,7 @@ async def handle_message(message):
     await asyncio.sleep(0.1)
 
     # Проверка, пришло ли новое сообщение от того же пользователя
-    if temp_messages[user_id] == user_message:
+    if isinstance(temp_messages[user_id], str) and temp_messages[user_id] == user_message:
         # Отправка сообщения "Думаю..." один раз
         thinking_message = await bot.send_message(user_id, "Думаю...")
         temp_messages[user_id] = {"thinking_message": thinking_message, "user_message": user_message}
@@ -136,6 +136,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 
 
