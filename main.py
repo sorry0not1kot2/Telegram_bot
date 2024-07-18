@@ -6,16 +6,12 @@ import logging
 import json
 from telebot.async_telebot import AsyncTeleBot
 import g4f
-from dotenv import load_dotenv
-
-# Загрузка переменных окружения из .env файла
-load_dotenv()
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Настройка бота
+# Настройка бота, загрузка токена из переменных окружения
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 if not BOT_TOKEN:
     raise ValueError("Токен для Telegram бота не найден в переменных окружения!")
