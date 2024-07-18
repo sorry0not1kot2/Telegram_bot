@@ -109,6 +109,8 @@ async def handle_message(message):
         if temp_messages[user_id] != user_message:
             user_message = temp_messages.pop(user_id)
             break
+        elif len(temp_messages[user_id].split()) > 1:
+            break
     
     # Отправка сообщения "Думаю..." один раз
     if user_id not in temp_messages:
@@ -141,8 +143,6 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
-
-
 
 
 
