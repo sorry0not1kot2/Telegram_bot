@@ -6,17 +6,25 @@ import logging
 import json
 from telebot.async_telebot import AsyncTeleBot
 import g4f
+from g4f.exceptions import G4FError
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения из .env файла
+load_dotenv()
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Настройка бота
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+if not BOT_TOKEN:
+    raise ValueError("Токен для Telegram бота не найден в переменных окружения!")
 bot = AsyncTeleBot(BOT_TOKEN)
 
 # Словарь для хранения истории чата
 chat_history = {}
+
 # Словарь для хранения временных сообщений
 temp_messages = {}
 
@@ -40,20 +48,18 @@ async def get_gpt_response(user_id, user_message):
         # Добавление сообщения пользователя в историю чата
         chat_history.setdefault(user_id, []).append({"role": "user", "content": user_message})
         logging.info("Отправка запроса к g4f")
-        
         response = await g4f.ChatCompletion.create_async(
             model="gpt-4o",
             messages=chat_history[user_id],
             no_sandbox=True
         )
-        
         logging.info(f"Получен ответ от g4f: {response}")
-        
+
         # Проверка на пустой ответ
         if not response:
             logging.warning("Получен пустой ответ от g4f")
             return "Извините, я не смог сгенерировать ответ. Попробуйте еще раз."
-        
+
         if isinstance(response, str):
             try:
                 response_data = json.loads(response)
@@ -64,10 +70,13 @@ async def get_gpt_response(user_id, user_message):
             bot_response = response.get('choices', [{}])[0].get('message', {}).get('content', 'Нет ответа')
         else:
             raise ValueError("Неожиданный формат ответа от API")
-        
+
         # Добавление ответа бота в историю чата
         chat_history[user_id].append({"role": "assistant", "content": bot_response})
         return bot_response
+    except G4FError as e:
+        logging.error(f"Ошибка при запросе к g4f: {e}")
+        return "Произошла ошибка при обращении к g4f."
     except Exception as e:
         logging.error(f"Ошибка при обработке сообщения: {e}")
         return "Произошла ошибка при обработке вашего сообщения."
@@ -89,32 +98,33 @@ async def handle_message(message):
     user_id = message.chat.id
     user_message = message.text
     logging.info(f"Получено сообщение: {user_message}")
-    
+
     # Инициализация истории чата для нового пользователя
     chat_history.setdefault(user_id, [])
-    
+
     # Сохранение временного сообщения
     if user_id in temp_messages:
         temp_messages[user_id] += " " + user_message
     else:
         temp_messages[user_id] = user_message
-    
+
     # Задержка перед отправкой сообщения к LLM
-    await asyncio.sleep(0.2)
-    
+    await asyncio.sleep(0.1)  # Уменьшена задержка до 0.1 секунд
+
     # Проверка, пришло ли новое сообщение от того же пользователя
-    if temp_messages[user_id] != user_message:
-        user_message = temp_messages.pop(user_id)
-    else:
-        user_message = temp_messages.pop(user_id)
-    
+    while True:
+        await asyncio.sleep(0.05)
+        if temp_messages[user_id] != user_message:
+            user_message = temp_messages.pop(user_id)
+            break
+
     # Отправка сообщения "Думаю..."
     thinking_message = await bot.send_message(user_id, "Думаю...")
     bot_response = await get_gpt_response(user_id, user_message)
-    
+
     # Удаление сообщения "Думаю..."
     await bot.delete_message(chat_id=user_id, message_id=thinking_message.message_id)
-    
+
     # Разбиение длинного ответа на части и отправка их по частям
     for part in split_message(bot_response):
         await bot.send_message(user_id, part)
@@ -132,6 +142,7 @@ async def main():
 # Запуск бота
 if __name__ == '__main__':
     asyncio.run(main())
+
 
 
 
